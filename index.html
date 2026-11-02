@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hotel Portfolio Insights, a prototype by Sahithi Muppavaram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Spectral:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F3F6F6; --surface: #FFFFFF; --ink: #1F2A33; --muted: #5B6B74; --line: #D9E1E3;
+  --brass: #8C6A22; --ahead: #1F6F6B; --behind: #B4413C; --watch: #9A6512;
+  --ahead-soft: #DCEEEC; --behind-soft: #F6E1DF; --watch-soft: #F5EAD6;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12181C; --surface: #1A2227; --ink: #E6ECEE; --muted: #9AABB3; --line: #2C373D;
+    --brass: #D2B06A; --ahead: #5BC0B8; --behind: #E8857E; --watch: #E2B260;
+    --ahead-soft: #18332F; --behind-soft: #3A2220; --watch-soft: #352A16;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12181C; --surface: #1A2227; --ink: #E6ECEE; --muted: #9AABB3; --line: #2C373D;
+  --brass: #D2B06A; --ahead: #5BC0B8; --behind: #E8857E; --watch: #E2B260;
+  --ahead-soft: #18332F; --behind-soft: #3A2220; --watch-soft: #352A16;
+  color-scheme: dark;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Public Sans", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.5;
+}
+.wrap { max-width: 1040px; margin: 0 auto; padding: 24px 20px 48px; }
+header.top { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.brand { font-weight: 700; font-size: 1.05rem; }
+.brand small { display: block; font-weight: 400; color: var(--muted); font-size: 0.85rem; }
+.role label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+select, input[type=text] {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 6px; padding: 8px 10px; min-width: 260px; max-width: 100%;
+}
+.hero { padding: 32px 0 8px; }
+.hero h1 { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.15; margin: 0 0 10px; max-width: 26ch; }
+.hero p { margin: 0; color: var(--muted); max-width: 70ch; }
+.stake { color: var(--behind); font-weight: 600; }
+.rls { margin-top: 12px; font-size: 0.85rem; color: var(--muted); border-left: 3px solid var(--brass); padding-left: 10px; max-width: 70ch; }
+nav.tabs { display: flex; gap: 4px; margin: 24px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+nav.tabs a { color: var(--muted); text-decoration: none; padding: 10px 14px; border-bottom: 3px solid transparent; font-weight: 600; white-space: nowrap; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--brass); }
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.intro { color: var(--muted); margin: 0 0 16px; max-width: 75ch; }
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.row { border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.rowbtn {
+  all: unset; box-sizing: border-box; cursor: pointer; width: 100%;
+  display: grid; grid-template-columns: minmax(170px, 1.6fr) repeat(3, minmax(70px, 0.7fr)) minmax(160px, 1.6fr);
+  gap: 12px; align-items: center; padding: 12px 16px;
+}
+.rowbtn:hover { background: color-mix(in srgb, var(--bg) 60%, transparent); }
+.head { display: grid; grid-template-columns: minmax(170px, 1.6fr) repeat(3, minmax(70px, 0.7fr)) minmax(160px, 1.6fr); gap: 12px; padding: 10px 16px; font-size: 0.8rem; color: var(--muted); border-bottom: 1px solid var(--line); }
+.hname { font-family: "Spectral", Georgia, serif; font-size: 1.05rem; font-weight: 600; }
+.hmeta { display: block; font-size: 0.8rem; color: var(--muted); font-family: "Public Sans", Arial, sans-serif; font-weight: 400; }
+.num { font-variant-numeric: tabular-nums; }
+.gap { position: relative; height: 22px; }
+.gap .axis { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.gap .bar { position: absolute; top: 4px; height: 14px; border-radius: 2px; }
+.gap .val { position: absolute; top: 1px; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.detail { padding: 4px 16px 16px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.detail div { background: var(--bg); border-radius: 6px; padding: 10px 12px; font-size: 0.9rem; }
+.detail strong { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+.pill { display: inline-block; font-size: 0.78rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.pill.behind { background: var(--behind-soft); color: var(--behind); }
+.pill.ahead { background: var(--ahead-soft); color: var(--ahead); }
+.pill.watch { background: var(--watch-soft); color: var(--watch); }
+.scroll { overflow-x: auto; }
+.scroll > .list { min-width: 760px; }
+.fgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.fcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.fcard h3 { font-family: "Spectral", Georgia, serif; font-size: 1.05rem; margin: 0; }
+.fcard .sub { font-size: 0.8rem; color: var(--muted); }
+.fcard svg { width: 100%; height: 48px; display: block; margin: 8px 0; color: var(--muted); }
+.fline { display: flex; justify-content: space-between; gap: 8px; font-size: 0.9rem; }
+.why { margin: 8px 0 0; padding-left: 18px; font-size: 0.85rem; color: var(--muted); }
+.ask { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.askform { display: flex; gap: 8px; flex-wrap: wrap; }
+.askform input { flex: 1 1 280px; }
+button.primary { font: inherit; font-weight: 600; background: var(--ink); color: var(--surface); border: 0; border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.chips button { font: inherit; font-size: 0.85rem; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.answer { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.answer .q { font-weight: 600; margin: 0 0 6px; }
+.answer ul { margin: 8px 0; padding-left: 20px; }
+.sources { font-size: 0.8rem; color: var(--muted); }
+.note { margin-top: 14px; font-size: 0.82rem; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.chiprow { display: flex; flex-wrap: wrap; gap: 6px; }
+.chiprow button { font: inherit; font-size: 0.85rem; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.chiprow button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.toolbar select { min-width: 0; }
+.linkbtn { font: inherit; background: none; border: 0; padding: 0; color: var(--brass); text-decoration: underline; cursor: pointer; }
+.flag { margin-left: 6px; }
+.sim { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.panel h3 { margin: 0 0 12px; font-family: "Spectral", Georgia, serif; font-size: 1.1rem; }
+.ctl { margin-bottom: 16px; }
+.ctl label { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+.ctl input[type=range] { width: 100%; accent-color: var(--brass); }
+.ctl .hint { font-size: 0.8rem; color: var(--muted); }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 0.9rem; }
+.check input { margin-top: 4px; accent-color: var(--brass); }
+.big { font-family: "Spectral", Georgia, serif; font-size: 2rem; font-weight: 600; line-height: 1.1; }
+.cmp { margin: 14px 0; display: grid; gap: 8px; }
+.cmp .lbl { display: flex; justify-content: space-between; font-size: 0.85rem; }
+.cmp .track { height: 12px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.cmp .fill { height: 100%; border-radius: 3px; transition: width .25s ease; }
+@media (prefers-reduced-motion: reduce) { .cmp .fill { transition: none; } }
+.reset { font: inherit; font-size: 0.85rem; background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.dq { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.dq th, .dq td { text-align: left; padding: 10px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+.dq th { font-size: 0.8rem; color: var(--muted); font-weight: 500; border-top: 0; }
+.ok { color: var(--ahead); font-weight: 600; }
+.bad { color: var(--behind); font-weight: 600; }
+.summary { display: flex; flex-wrap: wrap; gap: 24px; margin-bottom: 14px; }
+.summary div { font-size: 0.85rem; color: var(--muted); }
+.summary b { display: block; font-size: 1.4rem; color: var(--ink); font-family: "Spectral", Georgia, serif; }
+.steps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+.steps li { display: grid; grid-template-columns: 100px 1fr; gap: 12px; align-items: start; border-top: 1px solid var(--line); padding-top: 10px; }
+.steps li .pill { text-align: center; }
+.steps b { font-size: 0.95rem; font-weight: 600; }
+.steps p { margin: 2px 0 0; font-size: 0.9rem; color: var(--muted); }
+.pill.kind { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
+.brief { margin-top: 16px; border-left: 4px solid var(--brass); }
+.brief ul { padding-left: 20px; }
+button.primary:disabled { opacity: .6; cursor: default; }
+.layers { display: grid; gap: 10px; }
+.layer { display: grid; grid-template-columns: 160px 1fr 220px; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; align-items: start; position: relative; }
+.layer + .layer::before { content: ""; position: absolute; left: 40px; top: -11px; width: 2px; height: 10px; background: var(--brass); }
+.ltitle { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 1.05rem; }
+.lwhat { font-size: 0.92rem; }
+.lproto { font-size: 0.85rem; color: var(--muted); }
+.lproto span { display: block; font-size: 0.78rem; color: var(--brass); font-weight: 600; }
+@media (max-width: 720px) { .layer { grid-template-columns: 1fr; gap: 6px; } }
+.mail, .teams { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.mhead { border-bottom: 1px solid var(--line); padding: 12px 16px; font-size: 0.9rem; display: grid; gap: 4px; }
+.mhead span { display: inline-block; width: 70px; color: var(--muted); }
+.mbody { padding: 16px; max-width: 72ch; }
+.mbody p, .tcard p { margin: 0 0 12px; }
+.mtable { margin: 4px 0 12px; max-width: 460px; }
+.teams { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 16px; }
+.tavatar { width: 36px; height: 36px; border-radius: 50%; background: #5B5FC7; color: #fff; display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; }
+.tmeta { font-size: 0.85rem; margin-bottom: 6px; }
+.tmeta span { color: var(--muted); margin-left: 6px; }
+.tcard { border: 1px solid var(--line); border-left: 4px solid #5B5FC7; border-radius: 6px; padding: 12px 14px; max-width: 72ch; background: var(--bg); }
+.ttitle { font-weight: 700; margin-bottom: 8px; }
+.outlook .obar { display: flex; gap: 14px; align-items: center; background: #0F6CBD; color: #fff; padding: 8px 14px; font-size: 0.85rem; }
+.osend { background: #fff; color: #0F6CBD; font-weight: 700; border-radius: 4px; padding: 3px 12px; }
+.editbox { width: 100%; min-height: 320px; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--brass); border-radius: 6px; padding: 10px; line-height: 1.5; resize: vertical; }
+.subjedit { width: 100%; min-width: 0; }
+.mhead div { display: flex; align-items: center; }
+.mhead div > span { flex: 0 0 70px; }
+.edited { white-space: pre-wrap; }
+a.reset { text-decoration: none; display: inline-block; }
+.backbtn { font: inherit; font-size: 0.9rem; font-weight: 600; background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 6px; padding: 6px 12px; cursor: pointer; margin-top: 20px; }
+.simsum { font-family: "Spectral", Georgia, serif; font-size: 1.15rem; line-height: 1.4; margin: 0 0 14px; }
+.checkrow { display: flex; gap: 10px; align-items: flex-start; }
+.infobtn { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: italic 600 0.8rem Georgia, serif; cursor: pointer; padding: 0; margin-top: 2px; }
+.infobtn[aria-expanded="true"] { background: var(--ink); color: var(--surface); }
+.infobox { margin-top: 10px; background: var(--bg); border-left: 3px solid var(--brass); padding: 10px 12px; font-size: 0.88rem; }
+.infobox p { margin: 0 0 8px; }
+.infobox p:last-child { margin: 0; }
+.aboutme h3 { font-size: 1.5rem; margin-bottom: 8px; }
+.aboutme p { margin: 0 0 14px; max-width: 75ch; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 20px; margin: 0; }
+.facts dt { font-size: 0.78rem; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.facts a, .ccard a { color: var(--ink); }
+.sechead { font-family: "Spectral", Georgia, serif; font-size: 1.4rem; margin: 28px 0 12px; }
+.contrib { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+.ccard { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--brass); border-radius: 8px; padding: 14px 16px; }
+.ccard h3 { font-family: "Spectral", Georgia, serif; font-size: 1.1rem; margin: 0 0 8px; }
+.ccard p { margin: 0 0 8px; font-size: 0.9rem; }
+.ccard b { font-weight: 600; }
+footer { margin-top: 40px; font-size: 0.8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+@media (max-width: 640px) { select { min-width: 0; width: 100%; } .role { width: 100%; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+const { useState, useEffect, useRef } = React;
+const html = htm.bind(React.createElement);
+
+// ---------- Pyramid hotel names with made-up sample numbers ----------
+const HOTELS = [
+  { id: "harborline", name: "Chatham Bars Inn", city: "Chatham, MA", region: "Northeast", rooms: 217, bOcc: .82, bAdr: 289, occ: .78, adr: 281, pace: .03 },
+  { id: "copper", name: "Mountain Shadows Resort", city: "Scottsdale, AZ", region: "West", rooms: 210, bOcc: .70, bAdr: 342, occ: .74, adr: 355, pace: .04 },
+  { id: "gulfwind", name: "Naples Grande Beach Resort", city: "Naples, FL", region: "Southeast", rooms: 474, bOcc: .76, bAdr: 310, occ: .71, adr: 296, pace: -.05 },
+  { id: "lakeshore", name: "The Lytle Park Hotel", city: "Cincinnati, OH", region: "Midwest", rooms: 180, bOcc: .64, bAdr: 189, occ: .66, adr: 191, pace: .06 },
+  { id: "pinehollow", name: "Dellshire Resort", city: "Wisconsin Dells, WI", region: "Midwest", rooms: 208, bOcc: .68, bAdr: 215, occ: .60, adr: 204, pace: -.04 },
+  { id: "missionpalms", name: "The Mission Inn Hotel & Spa", city: "Riverside, CA", region: "West", rooms: 240, bOcc: .73, bAdr: 265, occ: .75, adr: 270, pace: -.06 },
+  { id: "capeverde", name: "Hyatt Regency Grand Reserve", city: "Puerto Rico", region: "Caribbean", rooms: 300, bOcc: .80, bAdr: 330, occ: .77, adr: 338, pace: .08 },
+  { id: "backbay", name: "Wayfinder Newport Hotel", city: "Newport, RI", region: "Northeast", rooms: 150, bOcc: .85, bAdr: 245, occ: .86, adr: 250, pace: 0 },
+  { id: "redwood", name: "Chaminade Resort & Spa", city: "Santa Cruz, CA", region: "West", rooms: 160, bOcc: .72, bAdr: 279, occ: .69, adr: 262, pace: .05 },
+  { id: "riverwalk", name: "Marriott San Antonio Northwest", city: "San Antonio, TX", region: "South", rooms: 290, bOcc: .75, bAdr: 199, occ: .76, adr: 197, pace: -.02 }
+];
+// Seasonality, November 2025 to October 2026 (last value is October = 1.00)
+const SEASON = {
+  Northeast: [.80,.72,.62,.68,.80,.90,1.00,1.08,1.12,1.10,1.05,1.00],
+  West:      [.90,.85,.88,.95,1.02,1.00,.98,1.02,1.05,1.04,1.00,1.00],
+  Southeast: [1.02,1.15,1.30,1.40,1.45,1.25,1.05,.92,.88,.84,.86,1.00],
+  Midwest:   [.78,.70,.62,.66,.74,.85,.98,1.20,1.35,1.30,1.08,1.00],
+  Caribbean: [1.04,1.22,1.35,1.38,1.30,1.10,.95,.92,.95,.90,.85,1.00],
+  South:     [.90,.82,.85,.95,1.05,1.02,.98,1.00,.96,.94,.97,1.00]
+};
+const NOV_FACTOR = { Northeast: .84, West: .92, Southeast: 1.04, Midwest: .80, Caribbean: 1.06, South: .91 };
+const DAYS_OCT = 31, DAYS_NOV = 30;
+
+// Data quality checks per hotel (sample)
+const DATA_CHECKS = {
+  redwood: { days: 29, loaded: "Nov 1, 6:10 AM", issue: "October 14 and 15 are missing from the property system feed. October figures are based on 29 of 31 days." },
+  riverwalk: { days: 31, loaded: "Nov 1, 6:05 AM", issue: "ADR on October 9 was 4 times the usual level, likely a data entry error. That day is held for review." },
+  capeverde: { days: 31, loaded: "Oct 30, 11:40 PM", stale: true, issue: "Last load was 2 days ago. The nightly feed did not run on October 31." }
+};
+const checksFor = h => { const d = DATA_CHECKS[h.id] || { days: 31, loaded: "Nov 1, 6:00 AM" };
+  return { ...d, complete: d.days === 31, fresh: !d.stale, valid: h.id !== "riverwalk" }; };
+
+const ROLES = [
+  { id: "exec", label: "Executive, all hotels", test: () => true },
+  { id: "rvp-west", label: "Regional VP, West", test: h => h.region === "West" },
+  { id: "gm-harborline", label: "General manager, Chatham Bars Inn", test: h => h.id === "harborline" },
+  { id: "owner-gulfwind", label: "Owner, Naples Grande Beach Resort", test: h => h.id === "gulfwind" }
+];
+
+// ---------- Calculations ----------
+function status(gapPct) { return gapPct <= -0.03 ? "behind" : gapPct >= 0.03 ? "ahead" : "watch"; }
+const STATUS_LABEL = { behind: "Behind budget", ahead: "Ahead of budget", watch: "On track" };
+const FSTATUS_LABEL = { behind: "At risk", ahead: "Likely ahead", watch: "Likely on track" };
+
+const ENRICHED = HOTELS.map(h => {
+  const revpar = h.occ * h.adr, bRevpar = h.bOcc * h.bAdr;
+  const gap = revpar - bRevpar, gapPct = gap / bRevpar;
+  const occEffect = (h.occ - h.bOcc) * h.bAdr;     // RevPAR change from selling more or fewer rooms
+  const rateEffect = h.occ * (h.adr - h.bAdr);      // RevPAR change from charging more or less
+  const monthGap = gap * h.rooms * DAYS_OCT;
+  const nf = NOV_FACTOR[h.region];
+  const fRevpar = revpar * nf * (1 + h.pace * 0.6);
+  const fBudget = bRevpar * nf;
+  const fGapPct = fRevpar / fBudget - 1;
+  const fMonthGap = (fRevpar - fBudget) * h.rooms * DAYS_NOV;
+  const history = SEASON[h.region].map(s => revpar * s);
+  return { ...h, revpar, bRevpar, gap, gapPct, occEffect, rateEffect, monthGap, st: status(gapPct),
+           nf, fRevpar, fBudget, fGapPct, fMonthGap, fst: status(fGapPct), history };
+});
+
+const money = n => (n < 0 ? "−$" : "$") + Math.abs(Math.round(n)).toLocaleString("en-US");
+const pct = (n, d = 0) => (n * 100).toFixed(d) + "%";
+const signedPct = (n, d = 1) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n * 100).toFixed(d) + "%";
+
+function mainDriver(h) {
+  if (h.gap >= 0) return "Running ahead of budget.";
+  const occ = Math.abs(Math.min(h.occEffect, 0)), rate = Math.abs(Math.min(h.rateEffect, 0));
+  if (occ >= rate) return `Mostly fewer rooms sold: occupancy ${pct(h.occ)} vs ${pct(h.bOcc)} budget.`;
+  return `Mostly lower rates: ADR $${h.adr} vs $${h.bAdr} budget.`;
+}
+
+// ---------- Components ----------
+function GapBar({ v }) {
+  const width = Math.min(Math.abs(v) / 0.2, 1) * 50;
+  const color = v < -0.03 ? "var(--behind)" : v > 0.03 ? "var(--ahead)" : "var(--watch)";
+  const barStyle = v < 0 ? { right: "50%", width: width + "%", background: color } : { left: "50%", width: width + "%", background: color };
+  const valStyle = v < 0 ? { left: "calc(50% + 6px)", color } : { right: "calc(50% + 6px)", color };
+  return html`<div className="gap" role="img" aria-label=${"RevPAR vs budget " + signedPct(v)}>
+    <span className="axis"></span><span className="bar" style=${barStyle}></span>
+    <span className="val" style=${valStyle}>${signedPct(v)}</span></div>`;
+}
+
+const REGIONS = ["Northeast", "Southeast", "South", "Midwest", "West", "Caribbean"];
+const SORTS = {
+  gap: { label: "Furthest behind budget first", fn: (a, b) => a.gapPct - b.gapPct },
+  stake: { label: "Most revenue below budget first", fn: (a, b) => a.monthGap - b.monthGap },
+  name: { label: "Hotel name", fn: (a, b) => a.name.localeCompare(b.name) }
+};
+
+function Portfolio({ hotels, open, setOpen, go }) {
+  const [region, setRegion] = useState("All");
+  const [sort, setSort] = useState("gap");
+  const regions = REGIONS.filter(r => hotels.some(h => h.region === r));
+  const shown = hotels.filter(h => region === "All" || h.region === region).sort(SORTS[sort].fn);
+  return html`<section>
+    <p className="intro">October 2026 results compared with each hotel’s RevPAR budget. Select a hotel to see what’s driving the gap.</p>
+    <div className="toolbar">
+      ${regions.length > 1 ? html`<div className="chiprow" role="group" aria-label="Filter by region">
+        ${["All", ...regions].map(r => html`<button key=${r} type="button" aria-pressed=${region === r} onClick=${() => setRegion(r)}>${r}</button>`)}
+      </div>` : html`<span></span>`}
+      <select aria-label="Sort hotels" value=${sort} onChange=${e => setSort(e.target.value)}>
+        ${Object.entries(SORTS).map(([k, v]) => html`<option key=${k} value=${k}>${v.label}</option>`)}
+      </select>
+    </div>
+    <div className="scroll"><div className="list">
+      <div className="head"><span>Hotel</span><span>Occupancy</span><span>ADR</span><span>RevPAR</span><span>RevPAR vs budget</span></div>
+      ${shown.map(h => { const c = checksFor(h); const flagged = !(c.complete && c.fresh && c.valid);
+        return html`<div className="row" key=${h.id}>
+        <button className="rowbtn" aria-expanded=${open === h.id} onClick=${() => setOpen(open === h.id ? null : h.id)}>
+          <span className="hname">${h.name}${flagged && html`<span className="pill watch flag">Data check</span>`}<span className="hmeta">${h.city}, ${h.rooms} rooms</span></span>
+          <span className="num">${pct(h.occ)}</span>
+          <span className="num">$${h.adr}</span>
+          <span className="num">$${h.revpar.toFixed(0)}</span>
+          <${GapBar} v=${h.gapPct} />
+        </button>
+        ${open === h.id && html`<div className="detail">
+          <div><strong>Status</strong><span className=${"pill " + h.st}>${STATUS_LABEL[h.st]}</span></div>
+          <div><strong>Planned per night</strong>${Math.round(h.bOcc * h.rooms)} rooms sold at $${h.bAdr}</div>
+          <div><strong>Actual per night</strong>${Math.round(h.occ * h.rooms)} rooms sold at $${h.adr}</div>
+          <div><strong>${h.occEffect < 0 ? "Lost from empty rooms" : "Gained from extra rooms sold"}</strong>${h.occEffect >= 0 ? "+" : ""}${money(h.occEffect * h.rooms * DAYS_OCT)} this month</div>
+          <div><strong>${h.rateEffect < 0 ? "Lost from lower prices" : "Gained from higher prices"}</strong>${h.rateEffect >= 0 ? "+" : ""}${money(h.rateEffect * h.rooms * DAYS_OCT)} this month</div>
+          <div><strong>Total vs budget</strong>${h.monthGap >= 0 ? "+" : ""}${money(h.monthGap)} this month</div>
+          <div><strong>What’s driving it</strong>${mainDriver(h)}</div>
+          ${flagged && html`<div><strong>Data note</strong>${c.issue}</div>`}
+          <div><strong>Next step</strong><button type="button" className="linkbtn" onClick=${() => go("simulator", h.id)}>Test a pricing scenario</button> or <button type="button" className="linkbtn" onClick=${() => go("owner-update", h.id)}>write the owner update</button></div>
+        </div>`}
+      </div>`; })}
+      ${shown.length === 0 && html`<p className="intro" style=${{ padding: "16px" }}>No hotels match this filter. Choose All to see every hotel in your view.</p>`}
+    </div></div>
+  </section>`;
+}
+
+function Spark({ values, forecast }) {
+  const all = [...values, forecast];
+  const max = Math.max(...all), min = Math.min(...all);
+  const x = i => (i / (all.length - 1)) * 116 + 2;
+  const y = v => 44 - ((v - min) / (max - min || 1)) * 40;
+  const pts = values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  const last = values.length - 1;
+  return html`<svg viewBox="0 0 120 48" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points=${pts} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+    <line x1=${x(last)} y1=${y(values[last])} x2=${x(last + 1)} y2=${y(forecast)} stroke="var(--brass)" strokeWidth="2" strokeDasharray="3 2" vectorEffect="non-scaling-stroke" />
+    <circle cx=${x(last + 1)} cy=${y(forecast)} r="2.5" fill="var(--brass)" />
+  </svg>`;
+}
+
+function Forecast({ hotels, go }) {
+  const [onlyRisk, setOnlyRisk] = useState(false);
+  const sorted = [...hotels].filter(h => !onlyRisk || h.fst === "behind").sort((a, b) => a.fGapPct - b.fGapPct);
+  return html`<section>
+    <p className="intro">November 2026 RevPAR forecast for each hotel. The line shows the last 12 months, and the dashed gold segment is the forecast. Each forecast lists the reasons behind it.</p>
+    <div className="toolbar"><label className="check"><input type="checkbox" checked=${onlyRisk} onChange=${e => setOnlyRisk(e.target.checked)} /> Show only hotels at risk</label></div>
+    <div className="fgrid">
+      ${sorted.map(h => html`<article className="fcard" key=${h.id}>
+        <div className="fline"><h3>${h.name}</h3><span className=${"pill " + h.fst}>${FSTATUS_LABEL[h.fst]}</span></div>
+        <div className="sub">${h.city}</div>
+        <${Spark} values=${h.history} forecast=${h.fRevpar} />
+        <div className="fline"><span>Forecast RevPAR</span><span className="num">$${h.fRevpar.toFixed(0)} (range $${(h.fRevpar * .94).toFixed(0)} to $${(h.fRevpar * 1.06).toFixed(0)})</span></div>
+        <div className="fline"><span>Budget</span><span className="num">$${h.fBudget.toFixed(0)}</span></div>
+        <div className="fline"><span>Room revenue vs budget</span><span className="num">${money(h.fMonthGap)}</span></div>
+        <ul className="why">
+          <li>Starting point: October RevPAR is ${signedPct(h.gapPct)} vs budget.</li>
+          <li>Seasonality: November usually runs ${signedPct(h.nf - 1, 0)} vs October in the ${h.region}.</li>
+          <li>Bookings on the books: ${signedPct(h.pace, 0)} vs this time last year.</li>
+        </ul>
+        <p className="note"><button type="button" className="linkbtn" onClick=${() => go("portfolio", h.id)}>See October details</button></p>
+      </article>`)}
+    </div>
+    ${sorted.length === 0 && html`<p className="intro">No hotels in your view are at risk for November.</p>`}
+  </section>`;
+}
+
+function Simulator({ hotels, focus, setFocus }) {
+  const hotel = hotels.find(h => h.id === focus) || [...hotels].sort((a, b) => a.gapPct - b.gapPct)[0];
+  const [rate, setRate] = useState(0);
+  const [occPts, setOccPts] = useState(0);
+  const [elastic, setElastic] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
+  useEffect(() => { setRate(0); setOccPts(0); }, [hotel.id]);
+  const priceEffect = elastic ? -0.5 * (rate / 100) * hotel.occ : 0;
+  const newOcc = Math.max(0.2, Math.min(0.99, hotel.occ + occPts / 100 + priceEffect));
+  const newAdr = hotel.adr * (1 + rate / 100);
+  const curRooms = Math.round(hotel.occ * hotel.rooms), newRooms = Math.round(newOcc * hotel.rooms);
+  const curNight = hotel.occ * hotel.rooms * hotel.adr, newNight = newOcc * hotel.rooms * newAdr;
+  const change = (newNight - curNight) * DAYS_OCT;
+  const newBudgetGap = (newOcc * newAdr - hotel.bRevpar) * hotel.rooms * DAYS_OCT;
+  const signed = n => (n >= 0 ? "+" : "") + money(n);
+  const roomDiff = newRooms - curRooms;
+  const nothing = rate === 0 && occPts === 0;
+  const summary = nothing
+    ? `Move a slider to test a change at ${hotel.name}.`
+    : `${hotel.name} would sell ${roomDiff === 0 ? "the same number of" : Math.abs(roomDiff) + (roomDiff > 0 ? " more" : " fewer")} rooms a night at $${Math.round(newAdr)} each, and make ${change >= 0 ? money(change) + " more" : money(-change) + " less"} this month. ${newBudgetGap >= 0 ? "That puts it " + money(newBudgetGap) + " above budget." : "It would still be " + money(-newBudgetGap) + " below budget."}`;
+  const row = (label, before, after) => html`<tr><td>${label}</td><td className="num">${before}</td><td className="num"><b>${after}</b></td></tr>`;
+  return html`<section>
+    <p className="intro">Test a change before making it. Pick a hotel, then change the price or add more guests.</p>
+    <div className="sim">
+      <div className="panel">
+        <h3>Change</h3>
+        <div className="ctl"><label htmlFor="simhotel">Hotel</label>
+          <select id="simhotel" value=${hotel.id} onChange=${e => setFocus(e.target.value)}>
+            ${hotels.map(h => html`<option key=${h.id} value=${h.id}>${h.name}</option>`)}
+          </select></div>
+        <div className="ctl"><label htmlFor="rate"><span>Change room price</span><span className="num">${rate > 0 ? "+" : ""}${rate}%</span></label>
+          <input id="rate" type="range" min="-15" max="15" step="1" value=${rate} onChange=${e => setRate(+e.target.value)} />
+          <span className="hint">$${hotel.adr} today, $${Math.round(newAdr)} with this change</span></div>
+        <div className="ctl"><label htmlFor="occ"><span>Extra guests from sales</span><span className="num">${occPts > 0 ? "+" : ""}${Math.round(occPts / 100 * hotel.rooms)} rooms a night</span></label>
+          <input id="occ" type="range" min="-10" max="10" step="1" value=${occPts} onChange=${e => setOccPts(+e.target.value)} />
+          <span className="hint">For example, a group booking or a promotion</span></div>
+        <div className="checkrow">
+          <label className="check"><input type="checkbox" checked=${elastic} onChange=${e => setElastic(e.target.checked)} />
+            <span>Some guests book elsewhere when the price goes up</span></label>
+          <button type="button" className="infobtn" aria-label="How this works" aria-expanded=${showInfo} onClick=${() => setShowInfo(!showInfo)}>i</button>
+        </div>
+        ${showInfo && html`<div className="infobox">
+          <p><b>What it does:</b> when the price goes up, a few guests choose a cheaper hotel instead. When the price goes down, a few more guests book.</p>
+          <p><b>In this demo:</b> rooms sold change by half of the price change. For example, a 10% higher price means about 5% fewer rooms sold. This is a simple assumption, not real data.</p>
+          <p><b>In a real version:</b> the number would be learned from each hotel’s own booking history, by looking at how bookings changed when prices changed in the past. Competitor prices from nearby hotels would help too.</p>
+          <p><b>Tip:</b> this only matters when you change the price. Adding extra guests isn’t affected.</p>
+        </div>`}
+        <p className="note"><button type="button" className="reset" onClick=${() => { setRate(0); setOccPts(0); }}>Reset</button></p>
+      </div>
+      <div className="panel" aria-live="polite">
+        <h3>Result</h3>
+        <p className="simsum">${summary}</p>
+        <div className="scroll"><table className="dq">
+          <thead><tr><th></th><th>Today</th><th>With change</th></tr></thead>
+          <tbody>
+            ${row("Rooms sold a night", curRooms, newRooms)}
+            ${row("Price per room", "$" + hotel.adr, "$" + Math.round(newAdr))}
+            ${row("Money a night", money(curNight), money(newNight))}
+            ${row("Vs budget this month", signed(hotel.monthGap), signed(newBudgetGap))}
+          </tbody>
+        </table></div>
+        <div className="fline" style=${{ marginTop: "12px" }}><span>Change this month</span><span className=${"pill " + (change > 0 ? "ahead" : change < 0 ? "behind" : "watch")}>${signed(change)}</span></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function DataChecks({ hotels }) {
+  const rows = hotels.map(h => ({ h, c: checksFor(h) }));
+  const passed = rows.filter(r => r.c.complete && r.c.fresh && r.c.valid).length;
+  const mark = ok => ok ? html`<span className="ok">Pass</span>` : html`<span className="bad">Issue</span>`;
+  return html`<section>
+    <p className="intro">Numbers are only useful if people trust them. Every night, each hotel’s data is checked before it reaches the reports above.</p>
+    <div className="summary">
+      <div><b>${passed} of ${hotels.length}</b>hotels passed every check</div>
+      <div><b>3</b>checks per hotel: complete, up to date, and within normal ranges</div>
+    </div>
+    <div className="scroll"><div className="list" style=${{ minWidth: "720px" }}>
+      <table className="dq">
+        <thead><tr><th>Hotel</th><th>Complete</th><th>Up to date</th><th>Normal ranges</th><th>Last loaded</th><th>Note</th></tr></thead>
+        <tbody>${rows.map(({ h, c }) => html`<tr key=${h.id}>
+          <td>${h.name}</td><td>${mark(c.complete)}</td><td>${mark(c.fresh)}</td><td>${mark(c.valid)}</td>
+          <td className="num">${c.loaded}</td><td>${c.issue || "No issues"}</td></tr>`)}</tbody>
+      </table>
+    </div></div>
+    <p className="note">Hotels with an issue show a “Data check” label in the portfolio, so nobody makes a decision on incomplete numbers without knowing.</p>
+  </section>`;
+}
+
+const QUESTIONS = [
+  { id: "behind", q: "Which hotels are behind budget, and why?", keys: ["behind", "why", "under", "miss"],
+    answer: hs => { const r = hs.filter(h => h.st === "behind").sort((a, b) => a.gapPct - b.gapPct);
+      return { text: r.length ? `${r.length} of ${hs.length} hotels are behind their October RevPAR budget.` : "No hotels in your view are behind budget in October.",
+        items: r.map(h => ({ h, t: `${signedPct(h.gapPct)} vs budget, ${money(h.monthGap)} in room revenue. ${mainDriver(h)}` })), rows: r }; } },
+  { id: "stake", q: "Where is the most revenue at stake?", keys: ["stake", "revenue", "money", "lost", "loss"],
+    answer: hs => { const r = hs.filter(h => h.monthGap < 0).sort((a, b) => a.monthGap - b.monthGap);
+      const total = r.reduce((s, h) => s + h.monthGap, 0);
+      return { text: r.length ? `${money(-total)} in October room revenue is below budget across ${r.length} hotels.` : "No room revenue is below budget in your view.",
+        items: r.map(h => ({ h, t: money(h.monthGap) })), rows: r }; } },
+  { id: "nov", q: "Which hotels may miss their November budget?", keys: ["november", "forecast", "next month", "predict", "future"],
+    answer: hs => { const r = hs.filter(h => h.fst === "behind").sort((a, b) => a.fGapPct - b.fGapPct);
+      return { text: r.length ? `${r.length} hotels are forecast to miss November budget.` : "No hotels in your view are forecast to miss November budget.",
+        items: r.map(h => ({ h, t: `forecast ${signedPct(h.fGapPct)} vs budget. Bookings on the books ${signedPct(h.pace, 0)} vs last year.` })), rows: r }; } },
+  { id: "best", q: "Which hotels are performing best?", keys: ["best", "top", "ahead", "strong", "good"],
+    answer: hs => { const r = hs.filter(h => h.st === "ahead").sort((a, b) => b.gapPct - a.gapPct);
+      return { text: r.length ? `${r.length} hotels are ahead of their October budget.` : "No hotels in your view are ahead of budget in October.",
+        items: r.map(h => ({ h, t: `${signedPct(h.gapPct)} vs budget, ${money(h.monthGap)} in room revenue.` })), rows: r }; } },
+  { id: "trust", q: "Can I trust this month’s numbers?", keys: ["trust", "data", "quality", "accurate", "reliable"],
+    answer: hs => { const r = hs.filter(h => { const c = checksFor(h); return !(c.complete && c.fresh && c.valid); });
+      return { text: r.length ? `${hs.length - r.length} of ${hs.length} hotels passed every data check. ${r.length} need attention before you rely on them.` : `All ${hs.length} hotels in your view passed every data check.`,
+        items: r.map(h => ({ h, t: checksFor(h).issue })), rows: r }; } }
+];
+
+function Ask({ hotels, go }) {
+  const [text, setText] = useState("");
+  const [qid, setQid] = useState(null);
+  const [miss, setMiss] = useState(null);
+  const q = QUESTIONS.find(x => x.id === qid);
+  const result = q ? { q: q.q, ...q.answer(hotels) } : null;
+  const flagged = result ? result.rows.filter(h => { const c = checksFor(h); return !(c.complete && c.fresh && c.valid); }) : [];
+  const submit = e => {
+    e.preventDefault();
+    const t = text.toLowerCase().trim();
+    if (!t) return;
+    const m = QUESTIONS.find(x => x.keys.some(k => t.includes(k)));
+    if (m) { setQid(m.id); setMiss(null); } else { setQid(null); setMiss(text); }
+  };
+  return html`<section>
+    <p className="intro">Ask a question about your hotels. Every answer is calculated from the data you’re allowed to see, and lists the hotels it used.</p>
+    <div className="ask">
+      <form className="askform" onSubmit=${submit}>
+        <input type="text" aria-label="Your question" placeholder="For example: which hotels are behind budget?" value=${text} onChange=${e => setText(e.target.value)} />
+        <button className="primary" type="submit">Ask</button>
+      </form>
+      <div className="chips">${QUESTIONS.map(x => html`<button key=${x.id} type="button" onClick=${() => { setText(x.q); setQid(x.id); setMiss(null); }}>${x.q}</button>`)}</div>
+      ${miss && html`<div className="answer" aria-live="polite"><p className="q">${miss}</p><p>This prototype answers a few portfolio questions. Try one of the suggestions above.</p></div>`}
+      ${result && html`<div className="answer" aria-live="polite">
+        <p className="q">${result.q}</p>
+        <p>${result.text}</p>
+        ${result.items.length > 0 && html`<ul>${result.items.map(({ h, t }) => html`<li key=${h.id}><button type="button" className="linkbtn" onClick=${() => go("portfolio", h.id)}>${h.name}</button>: ${t}</li>`)}</ul>`}
+        ${flagged.length > 0 && q.id !== "trust" && html`<p className="sources">Data note: ${flagged.map(h => h.name).join(", ")} ${flagged.length === 1 ? "has" : "have"} an open data check, so treat ${flagged.length === 1 ? "its" : "their"} numbers with care.</p>`}
+        ${result.rows.length > 0 && html`<p className="sources">Sources: October 2026 results for ${result.rows.map(h => h.name).join(", ")}.</p>`}
+      </div>`}
+      <p className="note">In this prototype, answers come from fixed calculations. In production, this would use Azure OpenAI with retrieval over owner reports through Azure AI Search, with answers grounded in sources and evaluated before release.</p>
+    </div>
+  </section>`;
+}
+
+function blockedFor(h) { const c = checksFor(h); return !(c.complete && c.fresh); }
+const names = hs => hs.length <= 1 ? hs.map(h => h.name).join("") : hs.length === 2 ? hs[0].name + " and " + hs[1].name : hs.slice(0, -1).map(h => h.name).join(", ") + ", and " + hs[hs.length - 1].name;
+
+function buildRun(hotels) {
+  const flagged = hotels.filter(h => { const c = checksFor(h); return !(c.complete && c.fresh && c.valid); });
+  const blocked = hotels.filter(blockedFor);
+  const usable = hotels.filter(h => !blockedFor(h));
+  const behind = usable.filter(h => h.st === "behind").sort((a, b) => a.monthGap - b.monthGap);
+  const risk = usable.filter(h => h.fst === "behind").sort((a, b) => a.fGapPct - b.fGapPct);
+  const why = h => h.gap >= 0 ? "" : (Math.abs(Math.min(h.occEffect, 0)) >= Math.abs(Math.min(h.rateEffect, 0))
+    ? `${h.name} sold ${pct(h.occ)} of rooms, planned ${pct(h.bOcc)}.`
+    : `${h.name} charged $${h.adr} a night, planned $${h.bAdr}.`);
+  const steps = [
+    { kind: "Look up", name: "Check each hotel’s data", detail: `Checked ${hotels.length} ${hotels.length === 1 ? "hotel" : "hotels"}. ${flagged.length ? flagged.length + (flagged.length === 1 ? " has" : " have") + " data problems." : "No data problems."}` },
+    { kind: "Safety rule", name: "Skip hotels with bad data", detail: blocked.length ? `Skipped ${names(blocked)}, because ${blocked.length === 1 ? "its" : "their"} data is missing or out of date.` : "Every hotel’s data is complete and current." },
+    { kind: "Look up", name: "Find hotels behind budget", detail: behind.length ? `${names(behind)} made less than planned in October.` : "No hotels made less than planned in October." },
+    { kind: "Look up", name: "Find out why", detail: behind.length ? behind.map(why).join(" ") : "Nothing to explain." },
+    { kind: "Look up", name: "Look ahead to November", detail: risk.length ? `${names(risk)} will likely miss November too.` : "No hotels are likely to miss November." },
+    { kind: "Safety rule", name: "Double check every number", detail: "Every number in the brief comes from the steps above. Nothing is made up." },
+    { kind: "Result", name: "Write the morning brief", detail: "Done." }
+  ];
+  return { steps, behind, risk, blocked };
+}
+
+function MorningCheck({ hotels, go }) {
+  const run = buildRun(hotels);
+  const [shown, setShown] = useState(0);
+  const [running, setRunning] = useState(false);
+  useEffect(() => {
+    if (!running) return;
+    if (shown >= run.steps.length) { setRunning(false); return; }
+    const t = setTimeout(() => setShown(s => s + 1), 650);
+    return () => clearTimeout(t);
+  }, [running, shown]);
+  const start = () => {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) { setShown(run.steps.length); setRunning(false); } else { setShown(0); setRunning(true); }
+  };
+  const done = shown >= run.steps.length;
+  const top = run.behind[0];
+  return html`<section>
+    <p className="intro">Every morning, an assistant checks all the hotels and writes leaders a short summary of what needs attention. Press the button to watch it work.</p>
+    <div className="panel">
+      <div className="toolbar" style=${{ marginBottom: 0 }}>
+        <button className="primary" type="button" onClick=${start} disabled=${running}>${running ? "Checking hotels" : done ? "Run again" : "Run morning check"}</button>
+        <span style=${{ fontSize: "0.85rem", color: "var(--muted)" }}>Demo using the sample numbers</span>
+      </div>
+      ${shown > 0 && html`<ol className="steps" aria-live="polite">
+        ${run.steps.slice(0, shown).map((s, i) => html`<li key=${i}>
+          <span className=${"pill " + (s.kind === "Safety rule" ? "watch" : s.kind === "Result" ? "ahead" : "kind")}>${s.kind}</span>
+          <div><b>${i + 1}. ${s.name}</b><p>${s.detail}</p></div></li>`)}
+      </ol>`}
+    </div>
+    ${done && shown > 0 && html`<div className="panel brief" aria-live="polite">
+      <h3>Good morning. Here’s today’s summary.</h3>
+      <p>${run.behind.length ? `${run.behind.length} ${run.behind.length === 1 ? "hotel needs" : "hotels need"} attention:` : "No hotels need attention today."}</p>
+      ${run.behind.length > 0 && html`<ul>${run.behind.map(h => html`<li key=${h.id}><button type="button" className="linkbtn" onClick=${() => go("portfolio", h.id)}>${h.name}</button>: ${money(-h.monthGap)} below budget, mostly from ${Math.abs(Math.min(h.occEffect, 0)) >= Math.abs(Math.min(h.rateEffect, 0)) ? "empty rooms" : "lower prices"}.</li>`)}</ul>`}
+      ${run.risk.length > 0 && html`<p>${names(run.risk)} will likely miss November too.</p>`}
+      ${top && html`<p><b>Start with ${top.name}.</b> It’s missing the most money. <button type="button" className="linkbtn" onClick=${() => go("simulator", top.id)}>Test a fix</button></p>`}
+      ${run.blocked.length > 0 && html`<p className="sources">Not included: ${names(run.blocked)}, until ${run.blocked.length === 1 ? "its" : "their"} data is fixed.</p>`}
+    </div>`}
+    <p className="note">In a real version, this would run on Azure AI Foundry every morning, and each person would only see the hotels they look after.</p>
+  </section>`;
+}
+
+const LAYERS = [
+  { title: "Who uses it", what: "Hotel general managers, regional leaders, executives, and owners.", proto: "The Viewing as menu" },
+  { title: "The website", what: "Built in React and hosted on Azure Static Web Apps.", proto: "This page, built in React" },
+  { title: "Signing in", what: "People sign in with their Microsoft work account through Microsoft Entra ID. Row-level security makes sure each person only sees the hotels they look after.", proto: "The Viewing as menu shows how this works" },
+  { title: "Behind the scenes", what: "Node.js APIs on Azure Functions. They check who you are before sending back any data.", proto: "Everything runs in the browser for now" },
+  { title: "The data", what: "Pipelines in Microsoft Fabric load each hotel’s numbers every night. SQL and Python checks catch gaps and mistakes before anyone sees them.", proto: "Sample numbers and the Data checks tab" },
+  { title: "Forecasts", what: "A Python model trained on each hotel’s history in Fabric, and retrained as new months come in.", proto: "A simple seasonal forecast" },
+  { title: "Smart features", what: "Azure OpenAI through Microsoft Foundry powers the question box, owner updates, and morning check. Azure AI Search finds the right reports, and answers are tested before release.", proto: "Ask a question, Owner update writer, and Morning check, using fixed rules" },
+  { title: "Testing and releases", what: "Every change goes through a Git pull request, unit, integration, and browser tests, and an Azure DevOps pipeline before it goes live.", proto: "Not built yet" }
+];
+
+function Architecture() {
+  return html`<section>
+    <p className="intro">Here’s how I’d build this for real, using the tools listed for this role.</p>
+    <div className="layers">
+      ${LAYERS.map((l, i) => html`<div className="layer" key=${i}>
+        <div className="ltitle">${l.title}</div>
+        <div className="lwhat">${l.what}</div>
+        <div className="lproto"><span>In this prototype</span>${l.proto}</div>
+      </div>`)}
+    </div>
+  </section>`;
+}
+
+function planFor(h) {
+  if (h.gap >= 0) return "We’ll protect rates on peak dates while keeping occupancy strong, and look for ways to carry this momentum into November.";
+  const occ = Math.abs(Math.min(h.occEffect, 0)), rate = Math.abs(Math.min(h.rateEffect, 0));
+  if (occ >= rate) return "Our focus is filling more rooms: more group sales outreach and targeted promotions for our lowest-demand dates, while holding rates where demand is strong.";
+  return "Our focus is recovering rate: reviewing pricing on high-demand dates and reducing discounting where demand allows.";
+}
+
+function buildUpdate(h, tone) {
+  const c = checksFor(h);
+  const flagged = !(c.complete && c.fresh && c.valid);
+  const roomRev = h.revpar * h.rooms * DAYS_OCT, bRoomRev = h.bRevpar * h.rooms * DAYS_OCT;
+  const lines = [];
+  lines.push(`October RevPAR was $${h.revpar.toFixed(0)}, ${signedPct(h.gapPct)} vs our budget of $${h.bRevpar.toFixed(0)}. Room revenue was ${money(roomRev)}, ${h.monthGap >= 0 ? "+" : ""}${money(h.monthGap)} vs budget.`);
+  lines.push(h.gap >= 0 ? `We ran ahead of plan, with occupancy at ${pct(h.occ)} and an average rate of $${h.adr}.` : mainDriver(h).replace("Mostly fewer rooms sold:", "The gap came mostly from fewer rooms sold, with").replace("Mostly lower rates:", "The gap came mostly from lower rates, with"));
+  lines.push(`For November, we expect RevPAR around $${h.fRevpar.toFixed(0)} against a budget of $${h.fBudget.toFixed(0)} (${signedPct(h.fGapPct)}).`);
+  lines.push(planFor(h));
+  const detail = tone === "detailed" ? {
+    table: [
+      ["Occupancy", pct(h.occ), pct(h.bOcc)],
+      ["ADR", "$" + h.adr, "$" + h.bAdr],
+      ["RevPAR", "$" + h.revpar.toFixed(0), "$" + h.bRevpar.toFixed(0)],
+      ["Room revenue", money(roomRev), money(bRoomRev)]
+    ],
+    extra: [
+      `Rooms sold changed RevPAR by ${money(h.occEffect)} and room rate by ${money(h.rateEffect)}, per available room.`,
+      `November in the ${h.region} usually runs ${signedPct(h.nf - 1, 0)} vs October, and bookings on the books are ${signedPct(h.pace, 0)} vs this time last year.`
+    ]
+  } : null;
+  const note = flagged ? `A note on the data: ${c.issue}` : null;
+  const subject = `${h.name}: October 2026 performance update`;
+  const plain = ["Subject: " + subject, "", "Hello,", "", ...lines,
+    ...(detail ? ["", ...detail.table.map(r => `${r[0]}: ${r[1]} actual, ${r[2]} budget`), "", ...detail.extra] : []),
+    ...(note ? ["", note] : []), "", "Best regards,", `General Manager, ${h.name}`].join("\n");
+  return { subject, lines, detail, note, plain };
+}
+
+function OwnerUpdate({ hotels, focus, setFocus }) {
+  const hotel = hotels.find(h => h.id === focus) || hotels[0];
+  const [tone, setTone] = useState("brief");
+  const [format, setFormat] = useState("outlook");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(null);
+  const [copied, setCopied] = useState("");
+  const u = buildUpdate(hotel, tone);
+  const genBody = u.plain.split("\n").slice(2).join("\n");
+  useEffect(() => { setDraft(null); setEditing(false); }, [hotel.id, tone]);
+  const subject = draft ? draft.subject : u.subject;
+  const bodyText = draft ? draft.body : genBody;
+  const startEdit = () => { if (!draft) setDraft({ subject: u.subject, body: genBody }); setEditing(true); };
+  const copy = async () => {
+    try { await navigator.clipboard.writeText("Subject: " + subject + "\n\n" + bodyText); setCopied("Copied"); }
+    catch (e) { setCopied("Copy isn’t available here. Select the text to copy it."); }
+    setTimeout(() => setCopied(""), 2500);
+  };
+  const mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(bodyText);
+  const generated = html`<div>
+    <p>Hello,</p>
+    ${u.lines.map((l, i) => html`<p key=${i}>${l}</p>`)}
+    ${u.detail && html`<div className="scroll"><table className="dq mtable"><thead><tr><th></th><th>Actual</th><th>Budget</th></tr></thead>
+      <tbody>${u.detail.table.map(r => html`<tr key=${r[0]}><td>${r[0]}</td><td className="num">${r[1]}</td><td className="num">${r[2]}</td></tr>`)}</tbody></table></div>
+      ${u.detail.extra.map((l, i) => html`<p key=${"x" + i}>${l}</p>`)}`}
+    ${u.note && html`<p className="sources">${u.note}</p>`}
+    <p>Best regards,<br />General Manager, ${hotel.name}</p>
+  </div>`;
+  const body = editing
+    ? html`<textarea className="editbox" aria-label="Message text" value=${draft.body} onChange=${e => setDraft({ ...draft, body: e.target.value })}></textarea>`
+    : draft ? html`<div className="edited">${draft.body}</div>` : generated;
+  const subjectEl = editing
+    ? html`<input type="text" className="subjedit" aria-label="Subject" value=${draft.subject} onChange=${e => setDraft({ ...draft, subject: e.target.value })} />`
+    : subject;
+  return html`<section>
+    <p className="intro">Owners expect a clear monthly update. Pick a hotel, and a ready-to-send summary is written from the month’s results: what happened, why, what’s next, and the plan. The GM can edit it before sending.</p>
+    <div className="toolbar">
+      <select aria-label="Hotel" value=${hotel.id} onChange=${e => setFocus(e.target.value)}>
+        ${hotels.map(h => html`<option key=${h.id} value=${h.id}>${h.name}</option>`)}
+      </select>
+      <div className="chiprow" role="group" aria-label="Length">
+        ${[["brief", "Brief"], ["detailed", "Detailed"]].map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${tone === k} onClick=${() => setTone(k)}>${l}</button>`)}
+      </div>
+      <div className="chiprow" role="group" aria-label="Send as">
+        ${[["outlook", "Outlook"], ["teams", "Teams"]].map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${format === k} onClick=${() => setFormat(k)}>${l}</button>`)}
+      </div>
+    </div>
+    ${format === "outlook" ? html`<div className="mail outlook">
+      <div className="obar"><span className="osend">Send</span><span>Message</span></div>
+      <div className="mhead"><div><span>To</span>Ownership group, ${hotel.name}</div><div><span>Cc</span>Regional Vice President</div><div><span>Subject</span>${subjectEl}</div></div>
+      <div className="mbody">${body}</div>
+    </div>` : html`<div className="teams">
+      <div className="tavatar" aria-hidden="true">GM</div>
+      <div className="tmsg"><div className="tmeta"><b>General Manager, ${hotel.name}</b> <span>Today, 8:02 AM</span></div>
+        <div className="tcard"><div className="ttitle">${subjectEl}</div>${body}</div></div>
+    </div>`}
+    <div className="toolbar" style=${{ marginTop: "12px", justifyContent: "flex-start" }}>
+      ${editing
+        ? html`<button className="primary" type="button" onClick=${() => setEditing(false)}>Done editing</button>`
+        : html`<button className="reset" type="button" onClick=${startEdit}>Edit message</button>`}
+      ${draft && !editing && html`<button className="reset" type="button" onClick=${() => setDraft(null)}>Restore original</button>`}
+      <button className="primary" type="button" onClick=${copy}>Copy update</button>
+      ${format === "outlook" && html`<a className="reset" href=${mailto}>Open in email app</a>`}
+      <span aria-live="polite" style=${{ fontSize: "0.85rem", color: "var(--muted)" }}>${copied}</span>
+    </div>
+    <p className="note">Every number comes straight from the hotel’s results, and any open data issue is disclosed in the update. In production, a language model on Azure AI Foundry could adjust tone and wording while the figures stay locked to the source data, and the GM reviews and edits before sending through Outlook or Teams.</p>
+  </section>`;
+}
+
+const CONTRIBUTIONS = [
+  { title: "Assistants you can trust", have: "At PRAK Technologies, I build features that answer questions from company documents, with checks that catch bad answers. At CareerGPT, I made our AI answers 30% more relevant.", here: "An assistant that answers owner questions from real reports and shows where each answer came from." },
+  { title: "Seeing problems early", have: "I helped build TalentPulse, which predicts which employees may leave, explains why, and shows what it would cost.", here: "Spotting hotels that may miss budget, and why, before the month is over." },
+  { title: "Clean, reliable data", have: "I built a pipeline on Azure that brings in data from SAP, Salesforce, and Google Analytics. At One Convergence, I made our data processing 30% faster.", here: "Bringing each new hotel’s data in quickly and correctly." },
+  { title: "Easy and secure tools", have: "At CareerGPT, I built screens used by over 1,000 people a day. At One Convergence, I built secure logins and access rules.", here: "Tools where GMs, leaders, and owners each see only their own hotels." },
+  { title: "Work that holds up", have: "At One Convergence, my code had over 85% test coverage. I look for the real cause of a problem instead of patching it.", here: "Fewer surprises after each release." },
+  { title: "Building quickly", have: "I use Claude Code and Cursor every day to build faster, and I always review what they produce.", here: "Quick prototypes like this one, without cutting corners." }
+];
+
+function AboutMe() {
+  return html`<section>
+    <div className="panel aboutme">
+      <h3>Sahithi Muppavaram</h3>
+      <p>I’m an AI engineer. I build tools that turn data into answers people can trust. I currently work at PRAK Technologies, and I have a master’s degree in Information Systems from Northeastern University.</p>
+      <dl className="facts">
+        <div><dt>Can start</dt><dd>In 2 weeks</dd></div>
+        <div><dt>Email</dt><dd><a href="mailto:sahithi.muppavaram@gmail.com">sahithi.muppavaram@gmail.com</a></dd></div>
+        <div><dt>Phone</dt><dd><a href="tel:+19198066305">(919) 806-6305</a></dd></div>
+        <div><dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/sahithi-muppavaram/" target="_blank" rel="noopener noreferrer">linkedin.com/in/sahithi-muppavaram</a></dd></div>
+        <div><dt>Portfolio</dt><dd><a href="https://sahithimuppavaram.github.io/" target="_blank" rel="noopener noreferrer">sahithimuppavaram.github.io</a></dd></div>
+      </dl>
+    </div>
+    <h2 className="sechead">How I can contribute to your team</h2>
+    <div className="contrib">
+      ${CONTRIBUTIONS.map((c, i) => html`<article className="ccard" key=${i}>
+        <h3>${c.title}</h3>
+        <p><b>What I’ve done:</b> ${c.have}</p>
+        <p><b>At Pyramid:</b> ${c.here}</p>
+      </article>`)}
+    </div>
+  </section>`;
+}
+
+const VIEWS = [
+  { id: "portfolio", label: "Portfolio", C: Portfolio },
+  { id: "forecast", label: "November forecast", C: Forecast },
+  { id: "simulator", label: "What-if simulator", C: Simulator },
+  { id: "data-checks", label: "Data checks", C: DataChecks },
+  { id: "ask", label: "Ask a question", C: Ask },
+  { id: "owner-update", label: "Owner update writer", C: OwnerUpdate },
+  { id: "morning-check", label: "AI morning check", C: MorningCheck },
+  { id: "architecture", label: "How I’d build it", C: Architecture },
+  { id: "about-me", label: "About me", C: AboutMe }
+];
+const viewFromHash = () => { const h = location.hash.replace("#", ""); return VIEWS.some(v => v.id === h) ? h : "portfolio"; };
+
+function App() {
+  const [view, setView] = useState(viewFromHash());
+  const [roleId, setRoleId] = useState("exec");
+  const [open, setOpen] = useState(null);
+  const [focus, setFocus] = useState(null);
+  const [trail, setTrail] = useState([]);
+  const prevRef = useRef(view), backRef = useRef(false);
+  useEffect(() => {
+    const f = () => {
+      const nv = viewFromHash();
+      if (nv === prevRef.current) return;
+      if (backRef.current) backRef.current = false;
+      else { const pv = prevRef.current; setTrail(t => [...t, pv]); }
+      prevRef.current = nv; setView(nv);
+    };
+    window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f);
+  }, []);
+  const goBack = () => { if (!trail.length) return; const last = trail[trail.length - 1]; setTrail(t => t.slice(0, -1)); backRef.current = true; location.hash = last; window.scrollTo({ top: 0 }); };
+  const role = ROLES.find(r => r.id === roleId);
+  const hotels = ENRICHED.filter(role.test);
+  const go = (v, id) => { if (v === "portfolio") setOpen(id); if (v === "simulator" || v === "owner-update") setFocus(id); location.hash = v; window.scrollTo({ top: 0 }); };
+  const behind = hotels.filter(h => h.st === "behind");
+  const stake = hotels.filter(h => h.monthGap < 0).reduce((s, h) => s + h.monthGap, 0);
+  const headline = hotels.length === 1
+    ? `${hotels[0].name} is ${hotels[0].st === "behind" ? "behind" : hotels[0].st === "ahead" ? "ahead of" : "on track with"} budget in October.`
+    : behind.length ? `${behind.length} of ${hotels.length} hotels are behind budget in October.` : `All ${hotels.length} hotels are on track or ahead of budget in October.`;
+  const Current = VIEWS.find(v => v.id === view).C;
+  return html`<div className="wrap">
+    <header className="top">
+      <div className="brand">Hotel Portfolio Insights</div>
+      <div className="role"><label htmlFor="role">Viewing as</label>
+        <select id="role" value=${roleId} onChange=${e => { setRoleId(e.target.value); setOpen(null); setFocus(null); }}>
+          ${ROLES.map(r => html`<option key=${r.id} value=${r.id}>${r.label}</option>`)}
+        </select></div>
+    </header>
+    <div className="hero">
+      <h1>${headline}</h1>
+      <p>${stake < 0 ? html`<span className="stake">${money(-stake)}</span>` : "No"} room revenue below budget this month${stake < 0 ? ", across the hotels in your view." : "."}</p>
+    </div>
+    ${trail.length > 0 && html`<button type="button" className="backbtn" onClick=${goBack}>← Back to ${VIEWS.find(v => v.id === trail[trail.length - 1]).label}</button>`}
+    <nav className="tabs" aria-label="Views">
+      ${VIEWS.map(v => html`<a key=${v.id} href=${"#" + v.id} aria-current=${view === v.id ? "page" : undefined}>${v.label}</a>`)}
+    </nav>
+    <${Current} key=${view + roleId} hotels=${hotels} open=${open} setOpen=${setOpen} focus=${focus} setFocus=${setFocus} go=${go} />
+    <footer><strong>Disclaimer:</strong> Hotel names are from Pyramid Global Hospitality’s portfolio. All numbers are made up for this demo and are not actual hotel results.</footer>
+  </div>`;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} />`);
+</script>
+</body>
+</html>
