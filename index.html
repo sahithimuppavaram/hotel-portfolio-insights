@@ -464,6 +464,149 @@ function DataChecks({ hotels }) {
   </section>`;
 }
 
+// ---------- Data checks: is each hotel's data good enough to use? ----------
+const SYSTEMS = [
+  { id: "pms", label: "Rooms and rates system", what: "Rooms, rates, occupancy", vendor: h => ["Northeast", "Midwest", "Caribbean"].includes(h.region) ? "Vendor A" : "Vendor B", expected: "6:00 AM" },
+  { id: "booking", label: "Online booking system", what: "Reservations", vendor: () => "Vendor C", expected: "5:30 AM" },
+  { id: "pos", label: "Restaurant and spa sales", what: "Outlet transactions", vendor: () => "Vendor D", expected: "5:00 AM" },
+  { id: "labor", label: "Staff hours system", what: "Shifts and hours worked", vendor: () => "Vendor E", expected: "4:30 AM" }
+];
+const CHECKS = [
+  { id: "fresh", label: "On time", stage: "Landing" },
+  { id: "schema", label: "Same format", stage: "Landing" },
+  { id: "complete", label: "Nothing missing", stage: "Bronze" },
+  { id: "dupes", label: "No repeats", stage: "Bronze" },
+  { id: "ranges", label: "Numbers look normal", stage: "Silver" }
+];
+const BLOCKING = ["fresh", "complete", "ranges"];
+const DQ_CSS = ".fixsteps{margin:12px 0 0;padding-left:20px;display:grid;gap:6px;font-size:0.9rem}.fixsteps li.done{color:var(--muted)}.fixsteps li.done b{color:var(--ahead)}";
+const FEED_ISSUES = {
+  "redwood:pms": { fail: ["complete"], cause: "The vendor’s system was down for two nights.",  issue: "Two days of October are missing.", action: "Ask the vendor for those two days, then load just those days again." },
+  "riverwalk:pms": { fail: ["ranges"], cause: "Someone at the hotel typed the price wrong.",  issue: "The room price on October 9 was 4 times higher than usual. Probably a typo.", action: "Keep that day out of reports until the hotel confirms the right price." },
+  "capeverde:pms": { fail: ["fresh"], cause: "The connection to the vendor stopped working.",  loaded: "Oct 30, 11:40 PM", issue: "No new data for 2 days.", action: "Tell the vendor, then load the data again once it’s fixed." },
+  "gulfwind:pos": { fail: ["dupes"], cause: "The vendor sent the same files twice.",  issue: "The same sales were sent twice, so they would be counted twice.", action: "Repeats are removed automatically, because each sale has a unique ID." },
+  "copper:booking": { fail: ["schema"], cause: "The vendor updated their software.",  issue: "The vendor added a new column without telling anyone.", action: "Keep loading the columns we know. Review the new one before using it." },
+  "missionpalms:booking": { fail: ["schema"], cause: "The same vendor update.",  issue: "Same new column, from the same vendor.", action: "One fix with that vendor solves it for both hotels." },
+  "pinehollow:labor": { fail: ["fresh"], cause: "The vendor’s nightly export ran late.",  loaded: "Nov 1, 10:35 AM", issue: "Staff hours arrived 6 hours late.", action: "Staffing reports waited until the data arrived, then updated." }
+};
+function buildFeeds(hotels, fixed = []) {
+  const feeds = [];
+  hotels.forEach(h => SYSTEMS.forEach(s => {
+    const key = h.id + ":" + s.id, f = FEED_ISSUES[key] || { fail: [] }, isFixed = fixed.includes(key);
+    const results = Object.fromEntries(CHECKS.map(c => [c.id, isFixed || !f.fail.includes(c.id)]));
+    const failed = CHECKS.filter(c => !results[c.id]);
+    const score = 100 - failed.length * 20;
+    const st = failed.some(c => BLOCKING.includes(c.id)) ? "behind" : failed.length ? "watch" : "ahead";
+    feeds.push({ key, h, s, vendor: s.vendor(h), results, failed, score, st, isFixed, wasHeld: f.fail.some(c => BLOCKING.includes(c)),
+      loaded: f.loaded || "Nov 1, " + s.expected, issue: f.issue, action: f.action, cause: f.cause });
+  }));
+  return feeds;
+}
+const FEED_STATUS = { behind: "Kept out of reports", watch: "Needs a look", ahead: "Good" };
+const STAGES = [
+  { title: "1. When it arrives", what: "Did the data come on time, in the same format as always?", fail: "Alert the team and try again." },
+  { title: "2. When it’s saved", what: "Is anything missing, and is anything there twice?", fail: "Remove repeats. Load missing days again." },
+  { title: "3. Before it’s used", what: "Do the numbers look normal?", fail: "Keep strange numbers out until someone checks them." },
+  { title: "4. Reports", what: "Only checked data is used for forecasts, staffing, and owner updates.", fail: "Hotels with a problem get a label, so nobody is misled." }
+];
+
+function DataQuality({ hotels }) {
+  const [filter, setFilter] = useState("all");
+  const [sys, setSys] = useState("all");
+  const [open, setOpen] = useState(null);
+  const [fixed, setFixed] = useState([]);
+  const feeds = buildFeeds(hotels, fixed);
+  const fixSteps = f => [
+    { t: "Alert", d: "The data team is told automatically." },
+    { t: "Find the cause", d: f.cause },
+    { t: "Fix it at the source", d: f.action },
+    { t: "Load it again", d: "Load only the affected days. Because the load merges on each record’s ID, nothing is counted twice." },
+    { t: "Check again", d: "The same checks run again. If they pass, the data goes back into reports." }
+  ];
+  const count = st => feeds.filter(f => f.st === st).length;
+  const avg = feeds.length ? Math.round(feeds.reduce((s, f) => s + f.score, 0) / feeds.length) : 0;
+  const shown = feeds
+    .filter(f => (filter === "all" || f.st === filter) && (sys === "all" || f.s.id === sys))
+    .sort((a, b) => a.score - b.score || a.h.name.localeCompare(b.h.name));
+  const vendors = [...new Set(feeds.map(f => f.vendor))].sort().map(v => {
+    const vf = feeds.filter(f => f.vendor === v);
+    return { v, system: vf[0].s.label, n: vf.length, ok: vf.filter(f => f.st === "ahead").length,
+      onTime: vf.filter(f => f.results.fresh).length, score: Math.round(vf.reduce((s, f) => s + f.score, 0) / vf.length) };
+  });
+  const mark = ok => ok ? html`<span className="ok">Yes</span>` : html`<span className="bad">No</span>`;
+  return html`<section>
+    <style>${DQ_CSS}</style>
+    <p className="intro">Each hotel uses several systems, from different vendors. Every night, the data from each system is checked before anyone uses it. This demo shows ${hotels.length} ${hotels.length === 1 ? "hotel" : "hotels"} with 4 systems each.</p>
+    <div className="summary">
+      <div><b>${count("ahead")} of ${feeds.length}</b>are good</div>
+      <div><b>${count("behind")}</b>kept out of reports</div>
+      <div><b>${count("watch")}</b>need a look</div>
+    </div>
+    ${fixed.length > 0 && html`<p className="note" style=${{ marginTop: 0 }}>${fixed.length} fixed in this demo. <button type="button" className="linkbtn" onClick=${() => setFixed([])}>Reset the demo</button></p>`}
+    <div className="panel" style=${{ display: "grid", gap: "8px", fontSize: "0.9rem" }}>
+      <div><span className="pill ahead">Good</span> The data is safe to use.</div>
+      <div><span className="pill watch">Needs a look</span> A small problem was handled automatically. Someone should still check it.</div>
+      <div><span className="pill behind">Kept out of reports</span> This data is not used anywhere until it’s fixed. Reports show the last good numbers with a Data check label, so nobody makes decisions on wrong numbers.</div>
+    </div>
+
+    <h2 className="sechead">Every system, every hotel</h2>
+    <div className="toolbar">
+      <div className="chiprow" role="group" aria-label="Filter by status">
+        ${[["all", "All"], ["behind", "Kept out"], ["watch", "Needs a look"], ["ahead", "Good"]].map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${filter === k} onClick=${() => setFilter(k)}>${l}</button>`)}
+      </div>
+      <select aria-label="Filter by system" value=${sys} onChange=${e => setSys(e.target.value)}>
+        <option value="all">All systems</option>
+        ${SYSTEMS.map(s => html`<option key=${s.id} value=${s.id}>${s.label}</option>`)}
+      </select>
+    </div>
+    <div className="scroll"><div className="list" style=${{ minWidth: "860px" }}>
+      <table className="dq">
+        <thead><tr><th>Hotel and system</th>${CHECKS.map(c => html`<th key=${c.id}>${c.label}</th>`)}<th>Result</th></tr></thead>
+        <tbody>${shown.map(f => html`<${React.Fragment} key=${f.key}>
+          <tr style=${f.issue ? { cursor: "pointer" } : null} onClick=${() => f.issue && setOpen(open === f.key ? null : f.key)}>
+            <td>${f.issue ? html`<button type="button" className="linkbtn" aria-expanded=${open === f.key}>${f.h.name}</button>` : f.h.name}<span className="hmeta">${f.s.label}, ${f.vendor}${f.isFixed ? ", fixed today" : ""}</span></td>
+            ${CHECKS.map(c => html`<td key=${c.id}>${mark(f.results[c.id])}</td>`)}
+            <td><span className=${"pill " + f.st}>${FEED_STATUS[f.st]}</span></td>
+          </tr>
+          ${open === f.key && html`<tr><td colSpan=${CHECKS.length + 2}>
+            <div className="detail" style=${{ padding: 0 }}>
+              <div><strong>What happened</strong>${f.issue}</div>
+              <div><strong>Why</strong>${f.cause}</div>
+            </div>
+            <ol className="fixsteps">${fixSteps(f).map((x, i) => html`<li key=${i} className=${f.isFixed ? "done" : ""}><b>${x.t}</b> ${x.d}</li>`)}</ol>
+            ${f.isFixed
+              ? html`<p className="ok" style=${{ margin: "8px 0 0" }}>Fixed. The checks passed, and this data is back in reports.</p>`
+              : html`<button type="button" className="primary" style=${{ marginTop: "8px" }} onClick=${e => { e.stopPropagation(); setFixed([...fixed, f.key]); }}>Fix and load again</button>`}
+          </td></tr>`}
+        </${React.Fragment}>`)}</tbody>
+      </table>
+      ${shown.length === 0 && html`<p className="intro" style=${{ padding: "16px" }}>No feeds match this filter. Choose All to see every feed.</p>`}
+    </div></div>
+    <p className="note">Click a hotel name to see what went wrong and how it gets fixed.</p>
+
+    <h2 className="sechead">Which vendor has problems?</h2>
+    <div className="scroll"><div className="list" style=${{ minWidth: "560px" }}>
+      <table className="dq">
+        <thead><tr><th>Vendor</th><th>System</th><th>On time</th><th>Good</th></tr></thead>
+        <tbody>${vendors.map(v => html`<tr key=${v.v}>
+          <td>${v.v}</td><td>${v.system}</td>
+          <td className="num">${v.onTime} of ${v.n} hotels</td>
+          <td><span className=${"pill " + (v.ok === v.n ? "ahead" : "watch")}>${v.ok} of ${v.n} hotels</span></td></tr>`)}</tbody>
+      </table>
+    </div></div>
+    <p className="note">If one vendor causes problems at many hotels, one fix with that vendor solves them all.</p>
+
+    <h2 className="sechead">When each check happens</h2>
+    <div className="layers">
+      ${STAGES.map((s, i) => html`<div className="layer" key=${i}>
+        <div className="ltitle">${s.title}</div>
+        <div className="lwhat">${s.what}</div>
+        <div className="lproto"><span>If something is wrong</span>${s.fail}</div>
+      </div>`)}
+    </div>
+  </section>`;
+}
+
 const QUESTIONS = [
   { id: "behind", q: "Which hotels are behind budget, and why?", keys: ["behind", "why", "under", "miss"],
     answer: hs => { const r = hs.filter(h => h.st === "behind").sort((a, b) => a.gapPct - b.gapPct);
@@ -593,7 +736,8 @@ const LAYERS = [
   { title: "The website", what: "Built in React and hosted on Azure Static Web Apps.", proto: "This page, built in React" },
   { title: "Signing in", what: "People sign in with their Microsoft work account through Microsoft Entra ID. Row-level security makes sure each person only sees the hotels they look after.", proto: "The Viewing as menu shows how this works" },
   { title: "Behind the scenes", what: "Node.js APIs on Azure Functions. They check who you are before sending back any data.", proto: "Everything runs in the browser for now" },
-  { title: "The data", what: "Pipelines in Microsoft Fabric load each hotel’s numbers every night. SQL and Python checks catch gaps and mistakes before anyone sees them.", proto: "Sample numbers and the Data checks tab" },
+  { title: "Bringing data in", what: "Pipelines in Microsoft Fabric pull data from each vendor’s system every night. A config table lists every hotel and system, so adding a new hotel means adding a row, not writing new code. Data is saved first exactly as the vendor sent it, in a raw bronze layer, then cleaned in silver and shaped for reports in gold.", proto: "Sample hotels, systems, and vendors" },
+  { title: "Data quality", what: "Checks run at each step. When data arrives: is it on time and in the same format? In bronze: is anything missing or repeated? Before silver: do the numbers look normal? Bad data is kept out of reports and the team is alerted. Once the vendor fixes it, only the affected days are loaded again, and merging on each record’s ID means nothing is counted twice. Scores by vendor show who causes the most problems.", proto: "The Data checks and Data quality monitor tabs" },
   { title: "Forecasts", what: "A Python model trained on each hotel’s history in Fabric, and retrained as new months come in.", proto: "A simple seasonal forecast" },
   { title: "Smart features", what: "Azure OpenAI through Microsoft Foundry powers the question box, owner updates, and morning check. Azure AI Search finds the right reports, and answers are tested before release.", proto: "Ask a question, Owner update writer, and Morning check, using fixed rules" },
   { title: "Testing and releases", what: "Every change goes through a Git pull request, unit, integration, and browser tests, and an Azure DevOps pipeline before it goes live.", proto: "Not built yet" }
@@ -755,6 +899,7 @@ const VIEWS = [
   { id: "forecast", label: "November forecast", C: Forecast },
   { id: "simulator", label: "What-if simulator", C: Simulator },
   { id: "data-checks", label: "Data checks", C: DataChecks },
+  { id: "data-quality", label: "Data quality monitor", C: DataQuality },
   { id: "ask", label: "Ask a question", C: Ask },
   { id: "owner-update", label: "Owner update writer", C: OwnerUpdate },
   { id: "morning-check", label: "AI morning check", C: MorningCheck },
@@ -769,21 +914,22 @@ function App() {
   const [open, setOpen] = useState(null);
   const [focus, setFocus] = useState(null);
   const [trail, setTrail] = useState([]);
-  const prevRef = useRef(view), backRef = useRef(false);
+  const prevRef = useRef(view);
+  const navigate = (nv, fromBack = false) => {
+    if (!VIEWS.some(v => v.id === nv) || nv === prevRef.current) return;
+    if (!fromBack) { const pv = prevRef.current; setTrail(t => [...t, pv]); }
+    prevRef.current = nv; setView(nv);
+    try { history.replaceState(null, "", "#" + nv); } catch (e) {}
+    window.scrollTo({ top: 0 });
+  };
   useEffect(() => {
-    const f = () => {
-      const nv = viewFromHash();
-      if (nv === prevRef.current) return;
-      if (backRef.current) backRef.current = false;
-      else { const pv = prevRef.current; setTrail(t => [...t, pv]); }
-      prevRef.current = nv; setView(nv);
-    };
+    const f = () => navigate(viewFromHash());
     window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f);
   }, []);
-  const goBack = () => { if (!trail.length) return; const last = trail[trail.length - 1]; setTrail(t => t.slice(0, -1)); backRef.current = true; location.hash = last; window.scrollTo({ top: 0 }); };
+  const goBack = () => { if (!trail.length) return; const last = trail[trail.length - 1]; setTrail(t => t.slice(0, -1)); navigate(last, true); };
   const role = ROLES.find(r => r.id === roleId);
   const hotels = ENRICHED.filter(role.test);
-  const go = (v, id) => { if (v === "portfolio") setOpen(id); if (v === "simulator" || v === "owner-update") setFocus(id); location.hash = v; window.scrollTo({ top: 0 }); };
+  const go = (v, id) => { if (v === "portfolio") setOpen(id); if (v === "simulator" || v === "owner-update") setFocus(id); navigate(v); };
   const behind = hotels.filter(h => h.st === "behind");
   const stake = hotels.filter(h => h.monthGap < 0).reduce((s, h) => s + h.monthGap, 0);
   const headline = hotels.length === 1
@@ -804,7 +950,7 @@ function App() {
     </div>
     ${trail.length > 0 && html`<button type="button" className="backbtn" onClick=${goBack}>← Back to ${VIEWS.find(v => v.id === trail[trail.length - 1]).label}</button>`}
     <nav className="tabs" aria-label="Views">
-      ${VIEWS.map(v => html`<a key=${v.id} href=${"#" + v.id} aria-current=${view === v.id ? "page" : undefined}>${v.label}</a>`)}
+      ${VIEWS.map(v => html`<a key=${v.id} href=${"#" + v.id} aria-current=${view === v.id ? "page" : undefined} onClick=${e => { e.preventDefault(); navigate(v.id); }}>${v.label}</a>`)}
     </nav>
     <${Current} key=${view + roleId} hotels=${hotels} open=${open} setOpen=${setOpen} focus=${focus} setFocus=${setFocus} go=${go} />
     <footer><strong>Disclaimer:</strong> Hotel names are from Pyramid Global Hospitality’s portfolio. All numbers are made up for this demo and are not actual hotel results.</footer>
