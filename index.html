@@ -4,9 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hotel Portfolio Insights, a prototype by Sahithi Muppavaram</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Spectral:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
 :root {
   --bg: #F3F6F6; --surface: #FFFFFF; --ink: #1F2A33; --muted: #5B6B74; --line: #D9E1E3;
@@ -51,7 +53,16 @@ select, input[type=text] {
 .hero p { margin: 0; color: var(--muted); max-width: 70ch; }
 .stake { color: var(--behind); font-weight: 600; }
 .rls { margin-top: 12px; font-size: 0.85rem; color: var(--muted); border-left: 3px solid var(--brass); padding-left: 10px; max-width: 70ch; }
-nav.tabs { display: flex; gap: 4px; margin: 24px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.sections { display: flex; gap: 6px; margin: 24px 0 0; overflow-x: auto; padding-bottom: 2px; }
+.sections button { font: inherit; font-size: 0.92rem; font-weight: 600; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 7px 16px; cursor: pointer; white-space: nowrap; }
+.sections button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.sections + section, .sections + div > section { margin-top: 20px; }
+.kstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 24px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+.kstrip span { display: block; font-size: 0.8rem; color: var(--muted); }
+.kstrip b { display: block; font-family: "Spectral", Georgia, serif; font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kstrip b.ok { color: var(--ahead); }
+.kstrip small { font-size: 0.78rem; color: var(--muted); }
+nav.tabs { display: flex; gap: 4px; margin: 12px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
 nav.tabs a { color: var(--muted); text-decoration: none; padding: 10px 14px; border-bottom: 3px solid transparent; font-weight: 600; white-space: nowrap; }
 nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--brass); }
 a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
@@ -188,8 +199,213 @@ a.reset { text-decoration: none; display: inline-block; }
 .ccard h3 { font-family: "Spectral", Georgia, serif; font-size: 1.1rem; margin: 0 0 8px; }
 .ccard p { margin: 0 0 8px; font-size: 0.9rem; }
 .ccard b { font-weight: 600; }
+.brandlink { all: unset; cursor: pointer; font-weight: 700; font-size: 1.05rem; }
+.brandlink:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.brand small .linkbtn { font-size: inherit; }
+.whero { padding: 40px 0 32px; border-bottom: 1px solid var(--line); }
+.whero h1 { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: clamp(2.3rem, 6vw, 3.8rem); line-height: 1.04; letter-spacing: -0.01em; margin: 0 0 16px; max-width: 16ch; }
+.whero p { font-size: 1.08rem; color: var(--muted); max-width: 62ch; margin: 0 0 14px; }
+.whero .wlive { color: var(--ink); font-family: "Spectral", Georgia, serif; font-size: 1.2rem; border-left: 3px solid var(--brass); padding-left: 12px; margin: 18px 0 24px; }
+.ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+.ctas .primary, .ctas .reset { padding: 10px 18px; font-size: 0.95rem; }
+.wrap.touring { padding-bottom: 240px; }
+.welcome .whi { padding: 44px 0 30px; border-bottom: 1px solid var(--line); }
+.welcome .whi h1 { font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: clamp(2.6rem, 7vw, 4.4rem); line-height: 1; margin: 0 0 22px; }
+.welcome .whi p { font-size: 1.1rem; color: var(--muted); max-width: 58ch; margin: 0 0 22px; }
+.welcome .primary { padding: 10px 20px; font-size: 0.95rem; }
+.desk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 32px; align-items: center; }
+@media (max-width: 760px) { .desk { grid-template-columns: 1fr; } }
+.keycard { position: relative; aspect-ratio: 1.586; max-width: 360px; border-radius: 14px; padding: 16px 18px; background: linear-gradient(150deg, #23313B 0%, #1A242B 60%, #2B2416 100%); color: #F3F6F6; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; box-shadow: 0 14px 30px -12px rgba(0,0,0,.45); transform: rotate(-3deg); margin: 8px 0 0 6px; }
+.ktop { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 600; position: relative; z-index: 1; }
+.ktap { width: 22px; height: 22px; color: #E5CB8F; }
+.kstripe { position: absolute; left: 0; right: 0; top: 34%; height: 30px; background: #111A20; border-top: 1px solid #3A4750; border-bottom: 1px solid #3A4750; }
+.kbottom { display: flex; flex-direction: column; position: relative; z-index: 1; }
+.klabel { font-size: 0.75rem; color: #E5CB8F; font-weight: 600; }
+.kname { font-family: "Spectral", Georgia, serif; font-size: 1.4rem; font-weight: 600; line-height: 1.15; }
+.kcap { font-size: 0.82rem; color: var(--muted); margin: 14px 0 0; }
+.kbio { margin: 0 0 14px; max-width: 60ch; }
+.kfacts { display: grid; gap: 8px; margin: 0; }
+.kfacts div { display: grid; grid-template-columns: 78px 1fr; gap: 8px; font-size: 0.9rem; }
+.kfacts dt { color: var(--muted); }
+.kfacts dd { margin: 0; overflow-wrap: anywhere; }
+.kfacts a { color: var(--ink); }
+.deskh { font-family: "Spectral", Georgia, serif; font-size: 1.2rem; margin: 0 0 10px; }
+.acc { border-top: 1px solid var(--line); }
+.accitem { border-bottom: 1px solid var(--line); }
+.accbtn { all: unset; box-sizing: border-box; width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 4px; cursor: pointer; font-weight: 600; }
+.accbtn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.chev { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .2s ease; margin-right: 4px; }
+.accitem.open .chev { transform: rotate(-135deg); }
+.accitem.open .accbtn { color: var(--brass); }
+.accbody { padding: 0 4px 14px; font-size: 0.92rem; }
+.accbody p { margin: 0 0 6px; }
+.tower { max-width: 780px; margin: 0 auto; }
+.elevator { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 18px; }
+.epanel { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; background: linear-gradient(180deg, #D7DDE0, #AEB8BD); border: 1px solid #8E999F; box-shadow: inset 0 1px 0 rgba(255,255,255,.6); color: #1F2A33; }
+.elabel { font-size: 0.78rem; font-weight: 700; }
+.edisp { min-width: 40px; height: 36px; display: grid; place-items: center; background: #10171B; color: #F2B544; border-radius: 4px; font-family: "Spectral", Georgia, serif; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; text-shadow: 0 0 6px rgba(242,181,68,.6); }
+.ebtns { display: flex; gap: 6px; }
+.ebtns button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #7D888E; background: radial-gradient(circle at 40% 35%, #FFFFFF, #CBD2D6); color: #1F2A33; cursor: pointer; font-size: 0.72rem; }
+.ebtns button:not(:disabled):active { background: #F2B544; }
+.ebtns button:disabled { opacity: .4; cursor: default; }
+.ename { font-weight: 600; flex: 1 1 200px; }
+.shaft { align-self: stretch; width: 30px; margin: -11px -16px -11px 0; background: linear-gradient(90deg, transparent 13px, var(--line) 13px, var(--line) 15px, transparent 15px), var(--bg); border-left: 1px solid var(--line); display: grid; place-items: center; }
+.car { width: 22px; height: 28px; background: var(--ink); border: 2px solid #F2B544; border-radius: 3px; display: grid; place-items: stretch; }
+.car span { margin: 3px 3px 0; background: linear-gradient(90deg, #8E999F 49%, #10171B 49%, #10171B 51%, #8E999F 51%); }
+.roof { margin: 0 28px; background: var(--ink); color: var(--surface); text-align: center; padding: 10px 12px 8px; border-radius: 10px 10px 0 0; font-family: "Spectral", Georgia, serif; font-size: 1.05rem; position: relative; }
+.roof::before { content: ""; position: absolute; left: 50%; top: -14px; width: 2px; height: 14px; background: var(--ink); }
+.floors { border: 2px solid var(--ink); border-radius: 3px; background: var(--surface); overflow: hidden; }
+.floor { border-top: 1px solid var(--line); transition: background .2s ease; }
+.floor:first-child { border-top: 0; }
+.floor.cur { background: color-mix(in srgb, var(--brass) 7%, var(--surface)); }
+.floor.lobby { border-top: 2px solid var(--ink); }
+.floorbtn { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: 40px 1fr auto 30px; gap: 14px; align-items: center; padding: 11px 16px; cursor: pointer; }
+.floorbtn:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.fnum { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; font-family: "Spectral", Georgia, serif; font-weight: 600; font-size: 0.95rem; background: var(--bg); }
+.floor.open .fnum { background: var(--ink); color: #E5CB8F; border-color: var(--ink); }
+.ftitle { font-weight: 600; }
+.windows { display: flex; gap: 5px; }
+.windows i { width: 12px; height: 16px; border-radius: 2px; background: var(--bg); border: 1px solid var(--line); transition: background .25s ease, box-shadow .25s ease; }
+.floor.open .windows i { background: #E5CB8F; border-color: #C9A85C; box-shadow: 0 0 8px rgba(229,203,143,.6); }
+.floor.open .windows i:nth-child(3) { transition-delay: .08s; } .floor.open .windows i:nth-child(2) { transition-delay: .04s; } .floor.open .windows i:nth-child(4) { transition-delay: .12s; }
+.fbody { padding: 0 16px 16px 70px; font-size: 0.92rem; }
+.fbody p { margin: 0 0 8px; max-width: 70ch; }
+.fproto { color: var(--muted); font-size: 0.86rem; }
+.fproto .pill { margin-right: 6px; }
+.street { height: 10px; margin: 0 -14px; background: var(--line); border-radius: 0 0 6px 6px; }
+@media (max-width: 640px) { .fbody { padding-left: 16px; } .windows { display: none; } .floorbtn { grid-template-columns: 36px 1fr 30px; } .roof { margin: 0 14px; } .keycard { transform: none; margin: 0; } }
+@media (prefers-reduced-motion: reduce) { .windows i, .chev, .floor { transition: none; } }
+.wend { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.wend p { margin: 0; font-family: "Spectral", Georgia, serif; font-size: 1.3rem; }
+.pickup { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: 20px; align-items: end; }
+@media (max-width: 720px) { .pickup { grid-template-columns: 1fr; } }
+.pbars { display: grid; grid-template-columns: repeat(7, minmax(36px, 1fr)); gap: 8px; align-items: end; }
+.ptrack { height: 140px; display: flex; align-items: flex-end; }
+.pbar { width: 100%; border-radius: 3px 3px 0 0; background: var(--ahead); transition: height .3s ease; }
+.pbar.est { background: repeating-linear-gradient(45deg, var(--watch) 0 6px, var(--watch-soft) 6px 12px); }
+.pbar.late { background: var(--brass); }
+.pbar.gap { background: transparent; border: 2px dashed var(--behind); border-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .pbar { transition: none; } }
+.pval { text-align: center; font-size: 0.85rem; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+.pday { text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+.pstat { text-align: center; font-size: 0.72rem; font-weight: 600; }
+.pstat.ok { color: var(--muted); font-weight: 400; } .pstat.gap { color: var(--behind); } .pstat.est { color: var(--watch); } .pstat.late { color: var(--brass); }
+.ptotal span:first-child { display: block; font-size: 0.8rem; color: var(--muted); }
+.ptotal b { display: block; font-family: "Spectral", Georgia, serif; font-size: 1.8rem; font-weight: 600; margin-bottom: 4px; }
+.ptotal p { font-size: 0.9rem; margin: 10px 0 0; }
+.lineage { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 4px; }
+.lnode { font: inherit; flex: 1 0 120px; text-align: left; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.lnode b { display: block; font-size: 0.9rem; }
+.lnode span { font-size: 0.8rem; color: var(--muted); }
+.lnode[aria-pressed="true"] { border-color: var(--brass); box-shadow: inset 0 -3px 0 var(--brass); }
+.larrow { flex: 0 0 18px; align-self: center; height: 2px; background: var(--brass); position: relative; }
+.larrow::after { content: ""; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left-color: var(--brass); border-right: 0; }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85em; }
+.tour { position: fixed; z-index: 2000; right: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); width: min(380px, calc(100vw - 40px)); background: var(--ink); color: var(--surface); border-radius: 10px; padding: 16px 18px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+@media (max-width: 640px) { .tour { right: 12px; left: 12px; width: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); } }
+.tour small { opacity: .75; font-size: 0.78rem; }
+.tour h3 { font-family: "Spectral", Georgia, serif; font-size: 1.25rem; margin: 2px 0 6px; outline: none; }
+.tour p { margin: 0 0 14px; font-size: 0.92rem; line-height: 1.45; }
+.tdots { display: flex; gap: 4px; margin-bottom: 8px; }
+.tdots span { flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--surface) 25%, transparent); }
+.tdots span.done { background: color-mix(in srgb, var(--surface) 60%, transparent); }
+.tdots span.on { background: var(--brass); }
+.tbtns { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tbtns span { display: flex; gap: 8px; }
+.tour button { font: inherit; font-size: 0.88rem; font-weight: 600; border-radius: 6px; padding: 7px 14px; cursor: pointer; }
+.tour .tnext { background: var(--surface); color: var(--ink); border: 0; }
+.tour .tghost { background: none; color: var(--surface); border: 1px solid color-mix(in srgb, var(--surface) 40%, transparent); }
+.tour button:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.wgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.wcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.wcard h3 { font-family: "Spectral", Georgia, serif; font-size: 1.15rem; margin: 0 0 6px; }
+.wcard p { margin: 0 0 10px; font-size: 0.9rem; color: var(--muted); }
+.wcard ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.92rem; }
+.wsec { scroll-margin-top: 16px; padding-top: 12px; }
 footer { margin-top: 40px; font-size: 0.8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
 @media (max-width: 640px) { select { min-width: 0; width: 100%; } .role { width: 100%; } }
+
+/* ---------- Portfolio map ---------- */
+.mapgrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 820px) { .mapgrid { grid-template-columns: 1fr; } }
+.mapbox { height: 440px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); position: relative; isolation: isolate; }
+@media (max-width: 640px) { .mapbox { height: 340px; } }
+.mapbox .leaflet-container { width: 100%; height: 100%; font: inherit; background: var(--bg); }
+.mapfail { padding: 20px; color: var(--muted); }
+.mapbox .leaflet-tooltip.maplabel { background: transparent; border: 0; box-shadow: none; color: var(--ink); font-size: 0.75rem; font-weight: 600; padding: 0; text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg); }
+.mapbox .leaflet-tooltip.maplabel::before { display: none; }
+.pinicon { background: none; border: 0; }
+.pin { width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); display: grid; place-items: center; cursor: pointer; }
+.pin span { transform: rotate(45deg); color: #fff; font: 700 11px/1 "Public Sans", Arial, sans-serif; }
+.pin.ahead { background: #1F8A84; } .pin.watch { background: #C98A1B; } .pin.behind { background: #C8483F; }
+.pin.sel { box-shadow: 0 0 0 3px #1F2A33, 0 3px 10px rgba(0,0,0,.45); }
+.maptools { position: absolute; top: 10px; right: 52px; z-index: 1000; }
+.maptools button { font: inherit; font-size: 0.82rem; font-weight: 600; background: #fff; color: #1F2A33; border: 0; border-radius: 6px; padding: 6px 10px; box-shadow: 0 1px 4px rgba(0,0,0,.3); cursor: pointer; }
+.mapbox .leaflet-control-layers { font: inherit; font-size: 0.85rem; }
+.maptools { display: flex; gap: 6px; }
+.maptools button[aria-pressed="true"] { background: #1F2A33; color: #fff; }
+.evicon { background: none; border: 0; }
+.evdot { width: 26px; height: 26px; border-radius: 6px; transform: rotate(45deg); background: #fff; border: 2px solid #5B5FC7; box-shadow: 0 2px 6px rgba(0,0,0,.3); display: grid; place-items: center; cursor: pointer; }
+.evdot span { transform: rotate(-45deg); font-size: 13px; line-height: 1; }
+.evdot.sel { border-color: #1F2A33; box-shadow: 0 0 0 3px #5B5FC7; }
+.evlist { display: grid; gap: 10px; margin: 14px 0; }
+.evcard { background: var(--bg); border-radius: 6px; padding: 10px 12px; font-size: 0.88rem; border-left: 3px solid #5B5FC7; }
+.evcard.sel { box-shadow: 0 0 0 2px #5B5FC7; }
+.evcard b { font-size: 0.95rem; }
+.evcard p { margin: 4px 0; }
+.evhead { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.promo { margin-top: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; white-space: pre-wrap; font-size: 0.85rem; }
+.evsec { margin: 4px 0 0; font-family: "Spectral", Georgia, serif; font-size: 1.05rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.85rem; margin: 10px 0 0; color: var(--muted); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.dot.ahead { background: var(--ahead); } .dot.watch { background: var(--watch); } .dot.behind { background: var(--behind); }
+.story p { margin: 0 0 10px; }
+.story .score { font-family: "Spectral", Georgia, serif; font-size: 1.6rem; font-weight: 600; line-height: 1.1; }
+.story .score small { font-family: "Public Sans", Arial, sans-serif; font-size: 0.8rem; color: var(--muted); font-weight: 400; margin-left: 4px; }
+.parts { margin: 12px 0; display: grid; gap: 4px; font-size: 0.85rem; }
+.parts div { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 4px; }
+.storylinks { display: grid; gap: 6px; font-size: 0.9rem; }
+.hlist { display: grid; gap: 6px; margin-top: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.hitem { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; font-size: 0.9rem; }
+.hitem[aria-pressed="true"] { border-color: var(--brass); box-shadow: inset 3px 0 0 var(--brass); }
+.hitem:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* ---------- Board report ---------- */
+.report { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 28px; }
+.report h2 { font-family: "Spectral", Georgia, serif; font-size: 1.7rem; font-weight: 600; margin: 0 0 4px; line-height: 1.2; }
+.rsub { color: var(--muted); font-size: 0.85rem; margin: 0 0 18px; }
+.rlead { font-family: "Spectral", Georgia, serif; font-size: 1.2rem; line-height: 1.45; margin: 0 0 22px; max-width: 62ch; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.kpi { background: var(--bg); border-radius: 6px; padding: 12px 14px; }
+.kpi span { display: block; font-size: 0.8rem; color: var(--muted); }
+.kpi b { display: block; font-family: "Spectral", Georgia, serif; font-size: 1.45rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi small { font-size: 0.8rem; color: var(--muted); }
+.rsec { margin-top: 24px; }
+.rsec h3 { font-family: "Spectral", Georgia, serif; font-size: 1.15rem; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.rcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 24px; }
+.chartrow { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(160px, 1.6fr); gap: 12px; align-items: center; font-size: 0.88rem; padding: 3px 0; }
+.rlist { margin: 0; padding-left: 18px; }
+.rlist li { margin-bottom: 8px; font-size: 0.92rem; }
+.srcbtn { font-size: 0.78rem; margin-left: 6px; }
+.rfoot { margin-top: 24px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--muted); }
+.genbox { text-align: left; }
+.genbox p { margin: 0 0 14px; max-width: 60ch; }
+
+@media print {
+  @page { margin: 14mm; }
+  html:root:not([data-theme="none"]) {
+    --bg: #F3F6F6; --surface: #FFFFFF; --ink: #1F2A33; --muted: #4A5860; --line: #D9E1E3;
+    --brass: #8C6A22; --ahead: #1F6F6B; --behind: #B4413C; --watch: #9A6512;
+    --ahead-soft: #DCEEEC; --behind-soft: #F6E1DF; --watch-soft: #F5EAD6;
+    color-scheme: light; padding: 0;
+  }
+  body { background: #fff; font-size: 12px; }
+  header.top, .hero, nav.tabs, .backbtn, footer, .noprint { display: none !important; }
+  .wrap { max-width: none; padding: 0; }
+  .report { border: 0; padding: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rsec, .kpis, .chartrow { break-inside: avoid; }
+}
 </style>
 </head>
 <body>
@@ -197,6 +413,7 @@ footer { margin-top: 40px; font-size: 0.8rem; color: var(--muted); border-top: 1
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const { useState, useEffect, useRef } = React;
 const html = htm.bind(React.createElement);
@@ -214,6 +431,53 @@ const HOTELS = [
   { id: "redwood", name: "Chaminade Resort & Spa", city: "Santa Cruz, CA", region: "West", rooms: 160, bOcc: .72, bAdr: 279, occ: .69, adr: 262, pace: .05 },
   { id: "riverwalk", name: "Marriott San Antonio Northwest", city: "San Antonio, TX", region: "South", rooms: 290, bOcc: .75, bAdr: 199, occ: .76, adr: 197, pace: -.02 }
 ];
+// Approximate map locations for each hotel
+const COORDS = {
+  harborline: [41.682, -69.960], copper: [33.531, -111.958], gulfwind: [26.208, -81.815],
+  lakeshore: [39.100, -84.500], pinehollow: [43.627, -89.771], missionpalms: [33.983, -117.373],
+  capeverde: [18.408, -65.774], backbay: [41.490, -71.313], redwood: [36.975, -121.990], riverwalk: [29.534, -98.633]
+};
+// Sample local events near each hotel. Names and numbers are made up for the demo.
+const EVENTS = [
+  { id: "e1", hotel: "copper", name: "Desert golf championship", type: "Sports", dates: "Nov 19 to 22", nights: 4, attendance: 45000, off: [0.05, 0.07] },
+  { id: "e2", hotel: "gulfwind", name: "Gulf Coast art festival", type: "Festival", dates: "Nov 14 to 15", nights: 2, attendance: 30000, off: [0.06, 0.06] },
+  { id: "e3", hotel: "gulfwind", name: "Regional medical conference", type: "Conference", dates: "Nov 18 to 20", nights: 3, attendance: 2500, off: [-0.06, 0.07] },
+  { id: "e4", hotel: "lakeshore", name: "College basketball tournament", type: "Sports", dates: "Nov 27 to 29", nights: 3, attendance: 15000, off: [0.05, 0.07] },
+  { id: "e5", hotel: "pinehollow", name: "Holiday lights festival", type: "Festival", dates: "Nov 21 to 22", nights: 2, attendance: 12000, off: [0.05, 0.07] },
+  { id: "e6", hotel: "missionpalms", name: "Festival of lights opening", type: "Festival", dates: "Nov 27 to 28", nights: 2, attendance: 40000, off: [0.05, 0.07] },
+  { id: "e7", hotel: "capeverde", name: "Caribbean tech summit", type: "Conference", dates: "Dec 2 to 4", nights: 3, attendance: 3000, off: [0.05, 0.07] },
+  { id: "e8", hotel: "backbay", name: "Holiday mansion tours", type: "Festival", dates: "Dec 4 to 6", nights: 3, attendance: 10000, off: [0.05, 0.07] },
+  { id: "e9", hotel: "redwood", name: "Coastal surf classic", type: "Sports", dates: "Nov 14 to 15", nights: 2, attendance: 20000, off: [0.05, 0.07] },
+  { id: "e10", hotel: "riverwalk", name: "Stadium concert", type: "Concert", dates: "Nov 21", nights: 1, attendance: 60000, off: [0.05, 0.07] },
+  { id: "e11", hotel: "harborline", name: "Cape holiday stroll", type: "Festival", dates: "Dec 5 to 6", nights: 2, attendance: 8000, off: [0.05, 0.07] }
+];
+const EVENT_ICON = { Concert: "🎵", Conference: "🎤", Sports: "🏆", Festival: "🎉" };
+// Suggested action for a hotel during an event, from simple demo rules
+function eventPlan(h, e) {
+  const high = e.attendance >= 20000;
+  const rateUp = high ? (h.st === "behind" ? 8 : 12) : 0;
+  const occLift = high ? 0.12 : 0.06;
+  const newOcc = Math.min(0.95, h.occ + occLift), newAdr = h.adr * (1 + rateUp / 100);
+  const extra = (newOcc * newAdr - h.occ * h.adr) * h.rooms * e.nights;
+  const action = high
+    ? `Raise rates about ${rateUp}% for ${e.dates} and set a 2 night minimum stay.`
+    : `Keep rates steady and offer an attendee package, such as late checkout and breakfast.`;
+  return { high, rateUp, extra, action, rooms: Math.round((newOcc - h.occ) * h.rooms) };
+}
+function promoFor(h, e) {
+  const subject = e.type === "Conference" ? `Your stay for ${e.name}, ${e.dates}` : `Make a weekend of ${e.name} at ${h.name}`;
+  const body = [
+    `Hello,`, ``,
+    `${e.name} comes to ${h.city.split(",")[0]} ${e.dates}, and ${h.name} is the perfect place to stay.`, ``,
+    e.type === "Conference"
+      ? `Book our attendee package for a comfortable room, breakfast each morning, and late checkout on your last day.`
+      : `Book our event package for a comfortable room, breakfast for two, and late checkout so you can enjoy every moment.`, ``,
+    `Rooms are limited for these dates, so reserve early on our website for the best rate.`, ``,
+    `We look forward to welcoming you.`, `The team at ${h.name}`
+  ].join("\n");
+  return { subject, body };
+}
+
 // Seasonality, November 2025 to October 2026 (last value is October = 1.00)
 const SEASON = {
   Northeast: [.80,.72,.62,.68,.80,.90,1.00,1.08,1.12,1.10,1.05,1.00],
@@ -274,6 +538,47 @@ function mainDriver(h) {
   return `Mostly lower rates: ADR $${h.adr} vs $${h.bAdr} budget.`;
 }
 
+// ---------- Health score for the map ----------
+// 50 is neutral. October vs budget and the November outlook move it up or down, and open data checks take points off.
+function healthFor(h) {
+  const c = checksFor(h);
+  const dataOk = c.complete && c.fresh && c.valid;
+  const parts = { oct: h.gapPct * 250, nov: h.fGapPct * 150, data: dataOk ? 0 : -8 };
+  const score = Math.round(Math.max(0, Math.min(100, 50 + parts.oct + parts.nov + parts.data)));
+  const level = score >= 65 ? "ahead" : score >= 40 ? "watch" : "behind";
+  return { score, level, parts, dataOk, c };
+}
+const HEALTH_LABEL = { ahead: "Healthy", watch: "Watch", behind: "At risk" };
+const points = n => (n >= 0 ? "+" : "−") + Math.abs(Math.round(n)) + " points";
+
+function storyFor(h) {
+  const s1 = `${h.name} is ${signedPct(h.gapPct)} vs its October RevPAR budget, ${h.monthGap >= 0 ? money(h.monthGap) + " above" : money(-h.monthGap) + " below"} plan in room revenue.`;
+  const occUp = h.occ >= h.bOcc, rateUp = h.adr >= h.bAdr;
+  let s2;
+  if (occUp && rateUp) s2 = `Both occupancy at ${pct(h.occ)} and the average rate of $${h.adr} are beating plan.`;
+  else if (!occUp && !rateUp) s2 = `Fewer rooms sold, ${pct(h.occ)} vs ${pct(h.bOcc)} planned, and a lower average rate, $${h.adr} vs $${h.bAdr}, are both pulling it down.`;
+  else if (!occUp) s2 = `Rates are holding at $${h.adr}, but occupancy of ${pct(h.occ)} is below the ${pct(h.bOcc)} plan.`;
+  else s2 = `Occupancy is strong at ${pct(h.occ)}, but the average rate of $${h.adr} is below the $${h.bAdr} plan.`;
+  const outlook = h.fst === "behind" ? "November is at risk" : h.fst === "ahead" ? "November looks strong" : "November looks on track";
+  const s3 = `${outlook}, with a forecast of ${signedPct(h.fGapPct)} vs budget and bookings ${signedPct(h.pace, 0)} vs last year.`;
+  return [s1, s2, s3];
+}
+const escapeHtml = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// Copy text, with a fallback for browsers or frames that block the clipboard API
+async function copyText(text) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy"); document.body.removeChild(ta); return ok;
+  } catch (e) { return false; }
+}
+function printPage() {
+  try { window.focus(); window.print(); return true; } catch (e) { return false; }
+}
+
 // ---------- Components ----------
 function GapBar({ v }) {
   const width = Math.min(Math.abs(v) / 0.2, 1) * 50;
@@ -332,6 +637,159 @@ function Portfolio({ hotels, open, setOpen, go }) {
       </div>`; })}
       ${shown.length === 0 && html`<p className="intro" style=${{ padding: "16px" }}>No hotels match this filter. Choose All to see every hotel in your view.</p>`}
     </div></div>
+  </section>`;
+}
+
+// ---------- Portfolio map ----------
+function PortfolioMap({ hotels, go }) {
+  const mapEl = useRef(null), mapRef = useRef(null), layerRef = useRef(null), fittedRef = useRef(false);
+  const ranked = hotels.map(h => ({ h, ...healthFor(h) })).sort((a, b) => a.score - b.score);
+  const [sel, setSel] = useState(ranked.length ? ranked[0].h.id : null);
+  const [mapOk, setMapOk] = useState(!!window.L);
+  const [tilesFailed, setTilesFailed] = useState(false);
+  const boundsRef = useRef(null), prevSelRef = useRef(null), evLayerRef = useRef(null);
+  const [showEvents, setShowEvents] = useState(false);
+  const [selEvent, setSelEvent] = useState(null);
+  const [promoOpen, setPromoOpen] = useState(null);
+  const [copied, setCopied] = useState("");
+  const visibleEvents = EVENTS.filter(e => hotels.some(h => h.id === e.hotel));
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const showAll = () => { const m = mapRef.current, b = boundsRef.current; if (!m || !b) return;
+    if (b.length === 1) m.setView(b[0], 9, { animate: !reduceMotion }); else m.flyToBounds(b, { padding: [40, 40], animate: !reduceMotion, duration: 0.8 }); };
+  const counts = { ahead: 0, watch: 0, behind: 0 };
+  ranked.forEach(r => counts[r.level]++);
+
+  useEffect(() => {
+    if (!window.L || !mapEl.current) { setMapOk(false); return; }
+    const map = L.map(mapEl.current, { scrollWheelZoom: false });
+    const osm = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+    const fail = () => setTilesFailed(true);
+    const streets = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { attribution: osm, subdomains: "abcd", maxZoom: 19 }).on("tileerror", fail);
+    const satellite = L.layerGroup([
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { attribution: "Imagery &copy; Esri", maxZoom: 19 }),
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19 })
+    ]);
+    const dark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution: osm, subdomains: "abcd", maxZoom: 19 });
+    streets.addTo(map);
+    L.control.layers({ "Map": streets, "Satellite": satellite, "Dark": dark }, null, { position: "topright" }).addTo(map);
+    map.on("focus click", () => map.scrollWheelZoom.enable());
+    map.on("blur mouseout", () => map.scrollWheelZoom.disable());
+    mapRef.current = map;
+    layerRef.current = L.layerGroup().addTo(map);
+    evLayerRef.current = L.layerGroup().addTo(map);
+    setTimeout(() => map.invalidateSize(), 50);
+    return () => { map.remove(); mapRef.current = null; };
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current, layer = layerRef.current;
+    if (!map || !layer) return;
+    layer.clearLayers();
+    const css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim();
+    const pts = [];
+    ranked.forEach(r => {
+      const ll = COORDS[r.h.id]; if (!ll) return;
+      pts.push(ll);
+      const isSel = r.h.id === sel;
+      const icon = L.divIcon({ className: "pinicon", html: `<div class="pin ${r.level}${isSel ? " sel" : ""}"><span>${r.score}</span></div>`, iconSize: [30, 30], iconAnchor: [15, 36], tooltipAnchor: [0, -30] });
+      const m = L.marker(ll, { icon, zIndexOffset: isSel ? 1000 : 0, keyboard: true, title: r.h.name, alt: `${r.h.name}, ${HEALTH_LABEL[r.level]}` });
+      if (tilesFailed) m.bindTooltip(escapeHtml(r.h.city.split(",")[0]), { permanent: true, direction: "right", offset: [14, 12], className: "maplabel" });
+      else m.bindTooltip(escapeHtml(`${r.h.name}: ${HEALTH_LABEL[r.level]}, score ${r.score}`), { direction: "top" });
+      m.on("click", () => setSel(r.h.id));
+      m.addTo(layer);
+    });
+    boundsRef.current = pts;
+    if (!fittedRef.current && pts.length) {
+      if (pts.length === 1) map.setView(pts[0], 9); else map.fitBounds(pts, { padding: [40, 40] });
+      fittedRef.current = true;
+    } else if (sel && sel !== prevSelRef.current && COORDS[sel]) {
+      map.flyTo(COORDS[sel], Math.max(map.getZoom(), 10), { animate: !reduceMotion, duration: 0.9 });
+    }
+    prevSelRef.current = sel;
+  }, [sel, tilesFailed]);
+
+  useEffect(() => {
+    const layer = evLayerRef.current;
+    if (!mapRef.current || !layer) return;
+    layer.clearLayers();
+    if (!showEvents) return;
+    visibleEvents.forEach(e => {
+      const base = COORDS[e.hotel]; if (!base) return;
+      const ll = [base[0] + e.off[0], base[1] + e.off[1]];
+      const icon = L.divIcon({ className: "evicon", html: `<div class="evdot${selEvent === e.id ? " sel" : ""}"><span>${EVENT_ICON[e.type]}</span></div>`, iconSize: [26, 26], iconAnchor: [13, 13], tooltipAnchor: [0, -16] });
+      const m = L.marker(ll, { icon, zIndexOffset: 500, title: e.name, alt: `${e.name}, ${e.dates}` });
+      m.bindTooltip(escapeHtml(`${e.name}, ${e.dates}`), { direction: "top" });
+      m.on("click", () => { setSel(e.hotel); setSelEvent(e.id); });
+      m.addTo(layer);
+    });
+  }, [showEvents, selEvent, sel]);
+  const copyPromo = async p => {
+    const ok = await copyText("Subject: " + p.subject + "\n\n" + p.body);
+    setCopied(ok ? "Copied" : "Copy isn’t available here. Select the text to copy it.");
+    setTimeout(() => setCopied(""), 2500);
+  };
+
+  const cur = ranked.find(r => r.h.id === sel);
+  const curEvents = cur ? visibleEvents.filter(e => e.hotel === cur.h.id) : [];
+  return html`<section>
+    <p className="intro">Every hotel in your view, colored by overall health. The score combines October results vs budget, the November outlook, and data checks. Select a hotel to read its story.</p>
+    <div className="mapgrid">
+      <div>
+        <div className="mapbox">
+          ${mapOk && html`<div className="maptools"><button type="button" aria-pressed=${showEvents} onClick=${() => { setShowEvents(!showEvents); setSelEvent(null); setPromoOpen(null); }}>${showEvents ? "Hide events" : "Show events"}</button><button type="button" onClick=${showAll}>Show all hotels</button></div>`}
+          ${mapOk ? html`<div ref=${mapEl} style=${{ width: "100%", height: "100%" }} role="application" aria-label="Map of hotels"></div>`
+            : html`<p className="mapfail">The map could not load. Use the hotel list below to see each hotel’s health.</p>`}
+        </div>
+        <div className="legend">
+          <span><span className="dot ahead"></span>Healthy, ${counts.ahead}</span>
+          <span><span className="dot watch"></span>Watch, ${counts.watch}</span>
+          <span><span className="dot behind"></span>At risk, ${counts.behind}</span>
+          <span>The number on each pin is its health score</span>
+        </div>
+      </div>
+      ${cur && html`<div className="panel story" aria-live="polite">
+        <h3>${cur.h.name}</h3>
+        <p className="hmeta" style=${{ marginTop: "-8px" }}>${cur.h.city}, ${cur.h.rooms} rooms</p>
+        <p><span className="score">${cur.score}<small>of 100</small></span> <span className=${"pill " + cur.level}>${HEALTH_LABEL[cur.level]}</span></p>
+        ${storyFor(cur.h).map((s, i) => html`<p key=${i}>${s}</p>`)}
+        ${!cur.dataOk && html`<p className="sources">Data note: ${cur.c.issue}</p>`}
+        <div className="parts">
+          <div><span>October vs budget</span><span className="num">${points(cur.parts.oct)}</span></div>
+          <div><span>November outlook</span><span className="num">${points(cur.parts.nov)}</span></div>
+          <div><span>Data checks</span><span className="num">${cur.dataOk ? "All passed" : points(cur.parts.data)}</span></div>
+        </div>
+        ${showEvents && html`<div>
+          <h4 className="evsec">Upcoming events nearby</h4>
+          ${curEvents.length === 0 ? html`<p className="sources">No sample events near this hotel.</p>` : html`<div className="evlist">
+            ${curEvents.map(e => { const p = eventPlan(cur.h, e); const promo = promoFor(cur.h, e);
+              return html`<div key=${e.id} className=${"evcard" + (selEvent === e.id ? " sel" : "")}>
+                <div className="evhead"><b>${EVENT_ICON[e.type]} ${e.name}</b><span className=${"pill " + (p.high ? "ahead" : "watch")}>${p.high ? "High demand" : "Medium demand"}</span></div>
+                <p className="hmeta">${e.type}, ${e.dates}, about ${e.attendance.toLocaleString("en-US")} people</p>
+                <p><b>Suggested:</b> ${p.action}</p>
+                <p>Estimated extra room revenue: <b>${money(p.extra)}</b>, about ${p.rooms} more rooms a night.</p>
+                <button type="button" className="linkbtn" aria-expanded=${promoOpen === e.id} onClick=${() => { setPromoOpen(promoOpen === e.id ? null : e.id); setSelEvent(e.id); }}>${promoOpen === e.id ? "Hide promo" : "Draft promo email"}</button>
+                ${promoOpen === e.id && html`<div className="promo"><b>Subject: ${promo.subject}</b>\n\n${promo.body}</div>
+                  <p style=${{ marginTop: "6px" }}><button type="button" className="reset" onClick=${() => copyPromo(promo)}>Copy promo</button> <span aria-live="polite" className="sources">${copied}</span></p>`}
+              </div>`; })}
+          </div>`}
+        </div>`}
+        <div className="storylinks">
+          <button type="button" className="linkbtn" style=${{ justifySelf: "start" }} onClick=${() => go("portfolio", cur.h.id)}>See October details</button>
+          <button type="button" className="linkbtn" style=${{ justifySelf: "start" }} onClick=${() => go("simulator", cur.h.id)}>Test a pricing scenario</button>
+          <button type="button" className="linkbtn" style=${{ justifySelf: "start" }} onClick=${() => go("owner-update", cur.h.id)}>Write the owner update</button>
+          <button type="button" className="linkbtn" style=${{ justifySelf: "start" }} onClick=${() => go("sales-marketing", cur.h.id)}>Write a marketing campaign</button>
+        </div>
+      </div>`}
+    </div>
+    <h2 className="sechead">Hotels by health, lowest first</h2>
+    <div className="hlist" role="group" aria-label="Hotels by health">
+      ${ranked.map(r => html`<button key=${r.h.id} type="button" className="hitem" aria-pressed=${r.h.id === sel} onClick=${() => setSel(r.h.id)}>
+        <span><b>${r.h.name}</b><span className="hmeta">${r.h.city}</span></span>
+        <span><span className=${"pill " + r.level}>${r.score}, ${HEALTH_LABEL[r.level]}</span></span>
+      </button>`)}
+    </div>
+    <p className="note">In this prototype the stories are written from fixed rules using the sample numbers. In production, a language model would write them, with every number locked to the source data.</p>
   </section>`;
 }
 
@@ -464,7 +922,7 @@ function DataChecks({ hotels }) {
   </section>`;
 }
 
-// ---------- Data checks: is each hotel's data good enough to use? ----------
+// ---------- Data quality: lineage, missing days, profiling ----------
 const SYSTEMS = [
   { id: "pms", label: "Rooms and rates system", what: "Rooms, rates, occupancy", vendor: h => ["Northeast", "Midwest", "Caribbean"].includes(h.region) ? "Vendor A" : "Vendor B", expected: "6:00 AM" },
   { id: "booking", label: "Online booking system", what: "Reservations", vendor: () => "Vendor C", expected: "5:30 AM" },
@@ -481,13 +939,13 @@ const CHECKS = [
 const BLOCKING = ["fresh", "complete", "ranges"];
 const DQ_CSS = ".fixsteps{margin:12px 0 0;padding-left:20px;display:grid;gap:6px;font-size:0.9rem}.fixsteps li.done{color:var(--muted)}.fixsteps li.done b{color:var(--ahead)}";
 const FEED_ISSUES = {
-  "redwood:pms": { fail: ["complete"], cause: "The vendor’s system was down for two nights.",  issue: "Two days of October are missing.", action: "Ask the vendor for those two days, then load just those days again." },
-  "riverwalk:pms": { fail: ["ranges"], cause: "Someone at the hotel typed the price wrong.",  issue: "The room price on October 9 was 4 times higher than usual. Probably a typo.", action: "Keep that day out of reports until the hotel confirms the right price." },
-  "capeverde:pms": { fail: ["fresh"], cause: "The connection to the vendor stopped working.",  loaded: "Oct 30, 11:40 PM", issue: "No new data for 2 days.", action: "Tell the vendor, then load the data again once it’s fixed." },
-  "gulfwind:pos": { fail: ["dupes"], cause: "The vendor sent the same files twice.",  issue: "The same sales were sent twice, so they would be counted twice.", action: "Repeats are removed automatically, because each sale has a unique ID." },
-  "copper:booking": { fail: ["schema"], cause: "The vendor updated their software.",  issue: "The vendor added a new column without telling anyone.", action: "Keep loading the columns we know. Review the new one before using it." },
-  "missionpalms:booking": { fail: ["schema"], cause: "The same vendor update.",  issue: "Same new column, from the same vendor.", action: "One fix with that vendor solves it for both hotels." },
-  "pinehollow:labor": { fail: ["fresh"], cause: "The vendor’s nightly export ran late.",  loaded: "Nov 1, 10:35 AM", issue: "Staff hours arrived 6 hours late.", action: "Staffing reports waited until the data arrived, then updated." }
+  "redwood:pms": { fail: ["complete"], cause: "The vendor’s system was down for two nights.", issue: "Two days of October are missing.", action: "Fill both days with labeled estimates, ask the vendor for the files, then load those days into their correct dates." },
+  "riverwalk:pms": { fail: ["ranges"], cause: "Someone at the hotel typed the price wrong.", issue: "The room price on October 9 was 4 times higher than usual. Probably a typo.", action: "Use a labeled estimate for that day until the hotel confirms the right price." },
+  "capeverde:pms": { fail: ["fresh"], cause: "The connection to the vendor stopped working.", loaded: "Oct 30, 11:40 PM", issue: "No new data for 2 days.", action: "Fill the missing days with labeled estimates, tell the vendor, and load the real data once the connection is fixed." },
+  "gulfwind:pos": { fail: ["dupes"], cause: "The vendor sent the same files twice.", issue: "The same sales were sent twice, so they would be counted twice.", action: "Repeats are removed automatically, because each sale has a unique ID." },
+  "copper:booking": { fail: ["schema"], cause: "The vendor updated their software.", issue: "The vendor added a new column without telling anyone.", action: "Keep loading the columns we know. Review the new one before using it." },
+  "missionpalms:booking": { fail: ["schema"], cause: "The same vendor update.", issue: "Same new column, from the same vendor.", action: "One fix with that vendor solves it for both hotels." },
+  "pinehollow:labor": { fail: ["fresh"], cause: "The vendor’s nightly export ran late.", loaded: "Nov 1, 10:35 AM", issue: "Staff hours arrived 6 hours late.", action: "Staffing reports showed a labeled estimate until the data arrived, then updated." }
 };
 function buildFeeds(hotels, fixed = []) {
   const feeds = [];
@@ -497,62 +955,226 @@ function buildFeeds(hotels, fixed = []) {
     const failed = CHECKS.filter(c => !results[c.id]);
     const score = 100 - failed.length * 20;
     const st = failed.some(c => BLOCKING.includes(c.id)) ? "behind" : failed.length ? "watch" : "ahead";
-    feeds.push({ key, h, s, vendor: s.vendor(h), results, failed, score, st, isFixed, wasHeld: f.fail.some(c => BLOCKING.includes(c)),
+    feeds.push({ key, h, s, vendor: s.vendor(h), results, failed, score, st, isFixed,
       loaded: f.loaded || "Nov 1, " + s.expected, issue: f.issue, action: f.action, cause: f.cause });
   }));
   return feeds;
 }
-const FEED_STATUS = { behind: "Kept out of reports", watch: "Needs a look", ahead: "Good" };
-const STAGES = [
-  { title: "1. When it arrives", what: "Did the data come on time, in the same format as always?", fail: "Alert the team and try again." },
-  { title: "2. When it’s saved", what: "Is anything missing, and is anything there twice?", fail: "Remove repeats. Load missing days again." },
-  { title: "3. Before it’s used", what: "Do the numbers look normal?", fail: "Keep strange numbers out until someone checks them." },
-  { title: "4. Reports", what: "Only checked data is used for forecasts, staffing, and owner updates.", fail: "Hotels with a problem get a label, so nobody is misled." }
+const FEED_STATUS = { behind: "Filled and labeled", watch: "Needs a look", ahead: "Good" };
+const LINEAGE = [
+  { id: "vendor", title: "Vendor systems", what: "Each hotel’s rooms, booking, restaurant, and staff systems send files every night." },
+  { id: "landing", title: "Landing", what: "Did the data arrive on time, in the same format as always?", checks: ["fresh", "schema"] },
+  { id: "bronze", title: "Bronze", what: "Saved exactly as received. Is anything missing or repeated?", checks: ["complete", "dupes"] },
+  { id: "silver", title: "Silver", what: "Cleaned and checked. Do the numbers look normal?", checks: ["ranges"] },
+  { id: "gold", title: "Gold", what: "Shaped for reports. Gaps are filled with labeled estimates, never dropped." },
+  { id: "reports", title: "Reports", what: "Dashboards, forecasts, and owner updates. Every estimated day carries a label." }
 ];
+
+// ----- Missing day example -----
+function MissingDay({ hotels }) {
+  const h = hotels.find(x => x.id === "gulfwind") || hotels[0];
+  const [mode, setMode] = useState("gap");
+  const [method, setMethod] = useState("prev");
+  const scale = h.rooms / 300;
+  const real = [42, 38, 45, 51, 47, 40, 44].map(v => Math.max(1, Math.round(v * scale)));
+  const lastWeek = Math.round(real.reduce((a, b) => a + b, 0) * 0.97);
+  const est = method === "prev" ? real[0] : Math.round((real[0] + real[2]) / 2);
+  const vals = real.map((v, i) => i !== 1 ? v : mode === "gap" ? null : mode === "fill" ? est : v);
+  const total = vals.reduce((s, v) => s + (v || 0), 0);
+  const vs = total / lastWeek - 1;
+  const max = Math.max(...real, est) * 1.15;
+  const days = ["Nov 1", "Nov 2", "Nov 3", "Nov 4", "Nov 5", "Nov 6", "Nov 7"];
+  const kind = mode === "gap" ? "gap" : mode === "fill" ? "est" : "late";
+  const stat = { gap: "Missing", est: "Estimated", late: "Loaded late" }[kind];
+  const from = method === "prev" ? "Nov 1" : "the average of Nov 1 and Nov 3";
+  const msg = mode === "gap"
+    ? `Pickup looks like ${total} rooms, ${signedPct(vs)} vs last week, as if demand fell. But Nov 2 is simply missing. People could draw the wrong conclusion.`
+    : mode === "fill"
+    ? `Pickup is ${total} rooms, ${signedPct(vs)} vs last week. Nov 2 is a temporary estimate taken from ${from}, and it is labeled everywhere it appears.`
+    : `The Nov 2 file arrived late and was loaded into its own date. The estimate of ${est} rooms was replaced with the real ${real[1]}, and pickup was updated to ${total} rooms, ${signedPct(vs)} vs last week.`;
+  const steps = [
+    ["Spot the gap", "Nov 2 is on the expected calendar, but no file arrived."],
+    ["Keep loading", "Nov 3 to 7 load as normal. One missing day does not stop the pipeline."],
+    ["Fill and label", `Nov 2 gets a temporary estimate from ${from}, marked Estimated in every report.`],
+    ["Ask for the file", "The vendor is asked to resend Nov 2, and the day is tracked until it arrives."],
+    ["Load into the right date", "The late file is merged on hotel and date, so nothing is counted twice."],
+    ["Update the totals", "Only numbers that include Nov 2 are recalculated, with a note that they changed."]
+  ];
+  const done = mode === "gap" ? 2 : mode === "fill" ? 4 : 6;
+  return html`<div className="panel">
+    <p className="intro" style=${{ margin: "0 0 12px" }}>Example: ${h.name}, rooms picked up each day from November 1 to 7. Nov 2’s file never arrived. Sample numbers.</p>
+    <div className="toolbar">
+      <div className="chiprow" role="group" aria-label="How to show the missing day">
+        ${[["gap", "Leave the gap"], ["fill", "Fill the gap"], ["real", "Real data arrives"]].map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${mode === k} onClick=${() => setMode(k)}>${l}</button>`)}
+      </div>
+      ${mode !== "gap" && html`<select aria-label="How to estimate the missing day" value=${method} onChange=${e => setMethod(e.target.value)}>
+        <option value="prev">Estimate from the day before</option>
+        <option value="avg">Estimate from the days around it</option>
+      </select>`}
+    </div>
+    <div className="pickup">
+      <div className="pbars" role="img" aria-label=${days.map((d, i) => d + " " + (vals[i] == null ? "missing" : vals[i] + " rooms")).join(", ")}>
+        ${days.map((d, i) => { const k = i === 1 ? kind : "ok"; const v = vals[i];
+          return html`<div className="pcol" key=${d}>
+            <div className="pval">${v == null ? "?" : v}</div>
+            <div className="ptrack"><div className=${"pbar " + k} style=${{ height: (v == null ? 100 : v / max * 100) + "%" }}></div></div>
+            <div className="pday">${d}</div>
+            <div className=${"pstat " + k}>${i === 1 ? stat : "Loaded"}</div>
+          </div>`; })}
+      </div>
+      <div className="ptotal">
+        <span>7 day pickup</span>
+        <b>${total} rooms</b>
+        <span className=${"pill " + (mode === "gap" ? "behind" : "ahead")}>${signedPct(vs)} vs last week</span>
+        <p className=${mode === "gap" ? "bad" : ""} style=${{ fontWeight: mode === "gap" ? 600 : 400 }}>${msg}</p>
+      </div>
+    </div>
+    <ol className="fixsteps">${steps.map(([t, d], i) => html`<li key=${i} className=${i < done ? "done" : ""}><b>${i < done ? "Done:" : "Waiting:"} ${t}.</b> ${d}</li>`)}</ol>
+    <div className="infobox" style=${{ marginTop: "14px" }}>
+      <p><b>Which estimate to use:</b> the day before works well for numbers that change slowly, like rooms on the books. For daily activity like pickup, the average of the days around it is often closer. Either way, the estimate is labeled and replaced once the real data arrives.</p>
+    </div>
+  </div>`;
+}
+
+// ----- Data profiling -----
+const PROFILE_FIELDS = {
+  pms: [{ f: "room_rate", kind: "num", base: h => h.adr, spread: .15, money: true }, { f: "rooms_sold", kind: "num", base: h => h.occ * h.rooms, spread: .1 }, { f: "room_type", kind: "cat", distinct: 6 }],
+  booking: [{ f: "booking_id", kind: "id" }, { f: "arrival_date", kind: "date" }, { f: "channel", kind: "cat", distinct: 4 }],
+  pos: [{ f: "transaction_id", kind: "id" }, { f: "check_amount", kind: "num", base: () => 62, spread: .4, money: true }, { f: "outlet", kind: "cat", distinct: 5 }],
+  labor: [{ f: "employee_id", kind: "id" }, { f: "hours_worked", kind: "num", base: () => 7.6, spread: .12, dec: 1 }, { f: "department", kind: "cat", distinct: 7 }]
+};
+const ROWS_PER_DAY = { pms: h => h.rooms, booking: h => Math.round(h.rooms * 0.35), pos: h => Math.round(h.rooms * 2.2), labor: h => Math.round(h.rooms * 0.6) };
+function profileFor(feed) {
+  const sys = feed.s.id, h = feed.h;
+  const fail = feed.isFixed ? [] : (FEED_ISSUES[feed.key] || { fail: [] }).fail;
+  const typ = ROWS_PER_DAY[sys](h);
+  let rows = typ, rowsNote = "Normal";
+  if (fail.includes("complete") || (fail.includes("fresh") && feed.key !== "pinehollow:labor")) { rows = 0; rowsNote = "No rows received"; }
+  if (fail.includes("dupes")) { rows = typ * 2; rowsNote = "Twice the usual rows"; }
+  const fmt = (p, v) => p.money ? "$" + Math.round(v) : p.dec ? v.toFixed(p.dec) : Math.round(v).toLocaleString("en-US");
+  const fields = PROFILE_FIELDS[sys].map((p, i) => {
+    const missing = rows === 0 ? "No data" : (0.1 + i * 0.1).toFixed(1) + "%";
+    if (p.kind === "num") {
+      const b = p.base(h), lo = b * (1 - 2 * p.spread), hi = b * (1 + 2 * p.spread);
+      let seenHi = hi * 0.96, flag = null;
+      if (p.f === "room_rate" && fail.includes("ranges")) { seenHi = b * 4; flag = "Highest value is 4 times the usual"; }
+      return { f: p.f, missing, seen: rows === 0 ? "None" : `${fmt(p, lo * 1.04)} to ${fmt(p, seenHi)}`, usual: `${fmt(p, lo)} to ${fmt(p, hi)}`, flag };
+    }
+    if (p.kind === "id") {
+      const dup = fail.includes("dupes");
+      return { f: p.f, missing, seen: rows === 0 ? "None" : `${(dup ? rows / 2 : rows).toLocaleString("en-US")} unique of ${rows.toLocaleString("en-US")}`, usual: "Every row unique", flag: dup ? "Repeated IDs" : null };
+    }
+    if (p.kind === "date") return { f: p.f, missing, seen: rows === 0 ? "None" : "Nov 1 to Mar 28", usual: "Today to 12 months out", flag: null };
+    return { f: p.f, missing, seen: rows === 0 ? "None" : `${p.distinct} values`, usual: `${p.distinct} values`, flag: null };
+  });
+  if (fail.includes("schema")) fields.push({ f: "loyalty_tier", missing: "12.0%", seen: "3 values", usual: "Not seen before", flag: "New column" });
+  if (rows === 0) fields.forEach(x => { x.flag = x.flag || "No data"; });
+  const flagged = rowsNote !== "Normal" || fields.some(x => x.flag);
+  return { typ, rows, rowsNote, fields, flagged, late: fail.includes("fresh") && feed.key === "pinehollow:labor" };
+}
+
+function Profiling({ feeds }) {
+  const profiles = feeds.map(f => ({ f, p: profileFor(f) }));
+  const firstFlag = profiles.find(x => x.p.flagged) || profiles[0];
+  const [hid, setHid] = useState(firstFlag ? firstFlag.f.h.id : null);
+  const [sid, setSid] = useState(firstFlag ? firstFlag.f.s.id : "pms");
+  if (!profiles.length) return null;
+  const hotelsIn = [...new Map(feeds.map(f => [f.h.id, f.h])).values()];
+  const cur = profiles.find(x => x.f.h.id === hid && x.f.s.id === sid) || profiles[0];
+  const nFlag = profiles.filter(x => x.p.flagged).length;
+  return html`<div className="panel">
+    <p className="intro" style=${{ margin: "0 0 12px" }}>Profiling studies what each feed normally looks like: how many rows arrive, how many values are missing, and the usual range of each field. Those profiles set the “numbers look normal” checks, so limits are learned, not guessed. ${nFlag} of ${profiles.length} feeds look different from normal today.</p>
+    <div className="toolbar">
+      <select aria-label="Hotel" value=${cur.f.h.id} onChange=${e => setHid(e.target.value)}>
+        ${hotelsIn.map(h => html`<option key=${h.id} value=${h.id}>${h.name}</option>`)}
+      </select>
+      <select aria-label="System" value=${cur.f.s.id} onChange=${e => setSid(e.target.value)}>
+        ${SYSTEMS.map(s => { const fl = profiles.find(x => x.f.h.id === cur.f.h.id && x.f.s.id === s.id); return html`<option key=${s.id} value=${s.id}>${s.label}${fl && fl.p.flagged ? ", looks different" : ""}</option>`; })}
+      </select>
+    </div>
+    <div className="summary">
+      <div><b>${cur.p.rows.toLocaleString("en-US")}</b>rows received for Oct 31</div>
+      <div><b>${cur.p.typ.toLocaleString("en-US")}</b>rows on a usual day</div>
+      <div><b><span className=${"pill " + (cur.p.flagged ? "watch" : "ahead")}>${cur.p.flagged ? "Looks different" : "Normal"}</span></b>${cur.p.rowsNote !== "Normal" ? cur.p.rowsNote : cur.p.late ? "Arrived 6 hours late" : "compared with the last 30 days"}</div>
+    </div>
+    <div className="scroll"><table className="dq" style=${{ minWidth: "620px" }}>
+      <thead><tr><th>Field</th><th>Missing values</th><th>Seen on Oct 31</th><th>Usual</th><th>Status</th></tr></thead>
+      <tbody>${cur.p.fields.map(x => html`<tr key=${x.f}><td><code>${x.f}</code></td><td className="num">${x.missing}</td><td className="num">${x.seen}</td><td className="num">${x.usual}</td>
+        <td>${x.flag ? html`<span className="bad">${x.flag}</span>` : html`<span className="ok">Normal</span>`}</td></tr>`)}</tbody>
+    </table></div>
+  </div>`;
+}
 
 function DataQuality({ hotels }) {
   const [filter, setFilter] = useState("all");
   const [sys, setSys] = useState("all");
   const [open, setOpen] = useState(null);
   const [fixed, setFixed] = useState([]);
+  const [lin, setLin] = useState("landing");
   const feeds = buildFeeds(hotels, fixed);
   const fixSteps = f => [
     { t: "Alert", d: "The data team is told automatically." },
     { t: "Find the cause", d: f.cause },
     { t: "Fix it at the source", d: f.action },
-    { t: "Load it again", d: "Load only the affected days. Because the load merges on each record’s ID, nothing is counted twice." },
-    { t: "Check again", d: "The same checks run again. If they pass, the data goes back into reports." }
+    { t: "Load it again", d: "Load only the affected days into their correct dates. Because the load merges on each record’s ID, nothing is counted twice." },
+    { t: "Check again", d: "The same checks run again. If they pass, the real data replaces any estimate." }
   ];
   const count = st => feeds.filter(f => f.st === st).length;
-  const avg = feeds.length ? Math.round(feeds.reduce((s, f) => s + f.score, 0) / feeds.length) : 0;
   const shown = feeds
     .filter(f => (filter === "all" || f.st === filter) && (sys === "all" || f.s.id === sys))
     .sort((a, b) => a.score - b.score || a.h.name.localeCompare(b.h.name));
   const vendors = [...new Set(feeds.map(f => f.vendor))].sort().map(v => {
     const vf = feeds.filter(f => f.vendor === v);
-    return { v, system: vf[0].s.label, n: vf.length, ok: vf.filter(f => f.st === "ahead").length,
-      onTime: vf.filter(f => f.results.fresh).length, score: Math.round(vf.reduce((s, f) => s + f.score, 0) / vf.length) };
+    return { v, system: vf[0].s.label, n: vf.length, ok: vf.filter(f => f.st === "ahead").length, onTime: vf.filter(f => f.results.fresh).length };
   });
   const mark = ok => ok ? html`<span className="ok">Yes</span>` : html`<span className="bad">No</span>`;
+  const caughtAt = node => node.checks ? feeds.filter(f => f.failed.some(c => node.checks.includes(c.id))) : [];
+  const estimated = feeds.filter(f => f.st === "behind");
+  const estHotels = [...new Map(estimated.map(f => [f.h.id, f.h])).values()];
+  const nodeStat = n => n.id === "vendor" ? `${feeds.length} feeds` : n.checks ? (caughtAt(n).length ? `${caughtAt(n).length} caught` : "All clear")
+    : n.id === "gold" ? (estimated.length ? `${estimated.length} filled` : "No gaps") : (estHotels.length ? `${estHotels.length} labeled` : "All real data");
+  const node = LINEAGE.find(n => n.id === lin);
+  const nodeList = node.checks ? caughtAt(node) : node.id === "gold" ? estimated : [];
   return html`<section>
     <style>${DQ_CSS}</style>
-    <p className="intro">Each hotel uses several systems, from different vendors. Every night, the data from each system is checked before anyone uses it. This demo shows ${hotels.length} ${hotels.length === 1 ? "hotel" : "hotels"} with 4 systems each.</p>
+    <p className="intro">Each hotel uses several systems, from different vendors. Every night, the data from each system is checked before anyone uses it. Problem data is never quietly removed: gaps are filled with labeled estimates and replaced when the real data arrives.</p>
     <div className="summary">
       <div><b>${count("ahead")} of ${feeds.length}</b>are good</div>
-      <div><b>${count("behind")}</b>kept out of reports</div>
+      <div><b>${count("behind")}</b>filled and labeled</div>
       <div><b>${count("watch")}</b>need a look</div>
     </div>
     ${fixed.length > 0 && html`<p className="note" style=${{ marginTop: 0 }}>${fixed.length} fixed in this demo. <button type="button" className="linkbtn" onClick=${() => setFixed([])}>Reset the demo</button></p>`}
     <div className="panel" style=${{ display: "grid", gap: "8px", fontSize: "0.9rem" }}>
       <div><span className="pill ahead">Good</span> The data is safe to use.</div>
       <div><span className="pill watch">Needs a look</span> A small problem was handled automatically. Someone should still check it.</div>
-      <div><span className="pill behind">Kept out of reports</span> This data is not used anywhere until it’s fixed. Reports show the last good numbers with a Data check label, so nobody makes decisions on wrong numbers.</div>
+      <div><span className="pill behind">Filled and labeled</span> Data is missing, late, or wrong. Reports use a temporary estimate marked Estimated, so totals like 7 day pickup don’t look falsely low. The real data replaces it once it’s fixed.</div>
+    </div>
+
+    <h2 className="sechead">When a day is missing</h2>
+    <${MissingDay} hotels=${hotels} />
+
+    <h2 className="sechead">Where each issue was caught</h2>
+    <div className="lineage" role="group" aria-label="Data lineage">
+      ${LINEAGE.map((n, i) => html`<${React.Fragment} key=${n.id}>
+        ${i > 0 && html`<span className="larrow" aria-hidden="true"></span>`}
+        <button type="button" className="lnode" aria-pressed=${lin === n.id} onClick=${() => setLin(n.id)}>
+          <b>${n.title}</b><span>${nodeStat(n)}</span>
+        </button>
+      </${React.Fragment}>`)}
+    </div>
+    <div className="panel" style=${{ marginTop: "10px" }} aria-live="polite">
+      <h3>${node.title}</h3>
+      <p style=${{ margin: "0 0 8px" }}>${node.what}</p>
+      ${node.checks && html`<p className="sources" style=${{ margin: "0 0 8px" }}>Checks here: ${node.checks.map(c => CHECKS.find(x => x.id === c).label).join(" and ")}.</p>`}
+      ${nodeList.length > 0 && html`<ul className="why" style=${{ color: "var(--ink)" }}>${nodeList.map(f => html`<li key=${f.key}><b>${f.h.name}, ${f.s.label}:</b> ${f.issue} ${f.action}</li>`)}</ul>`}
+      ${node.id === "reports" && html`<p style=${{ margin: 0 }}>${estHotels.length ? `${names(estHotels)} currently show${estHotels.length === 1 ? "s" : ""} an Estimated label on some days.` : "Every report uses real data right now."}</p>`}
+      ${node.checks && nodeList.length === 0 && html`<p className="ok" style=${{ margin: 0 }}>No issues caught at this step.</p>`}
     </div>
 
     <h2 className="sechead">Every system, every hotel</h2>
     <div className="toolbar">
       <div className="chiprow" role="group" aria-label="Filter by status">
-        ${[["all", "All"], ["behind", "Kept out"], ["watch", "Needs a look"], ["ahead", "Good"]].map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${filter === k} onClick=${() => setFilter(k)}>${l}</button>`)}
+        ${[["all", "All"], ["behind", "Filled"], ["watch", "Needs a look"], ["ahead", "Good"]].map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${filter === k} onClick=${() => setFilter(k)}>${l}</button>`)}
       </div>
       <select aria-label="Filter by system" value=${sys} onChange=${e => setSys(e.target.value)}>
         <option value="all">All systems</option>
@@ -575,7 +1197,7 @@ function DataQuality({ hotels }) {
             </div>
             <ol className="fixsteps">${fixSteps(f).map((x, i) => html`<li key=${i} className=${f.isFixed ? "done" : ""}><b>${x.t}</b> ${x.d}</li>`)}</ol>
             ${f.isFixed
-              ? html`<p className="ok" style=${{ margin: "8px 0 0" }}>Fixed. The checks passed, and this data is back in reports.</p>`
+              ? html`<p className="ok" style=${{ margin: "8px 0 0" }}>Fixed. The checks passed, and real data replaced the estimate.</p>`
               : html`<button type="button" className="primary" style=${{ marginTop: "8px" }} onClick=${e => { e.stopPropagation(); setFixed([...fixed, f.key]); }}>Fix and load again</button>`}
           </td></tr>`}
         </${React.Fragment}>`)}</tbody>
@@ -583,6 +1205,9 @@ function DataQuality({ hotels }) {
       ${shown.length === 0 && html`<p className="intro" style=${{ padding: "16px" }}>No feeds match this filter. Choose All to see every feed.</p>`}
     </div></div>
     <p className="note">Click a hotel name to see what went wrong and how it gets fixed.</p>
+
+    <h2 className="sechead">Data profiling</h2>
+    <${Profiling} feeds=${feeds} />
 
     <h2 className="sechead">Which vendor has problems?</h2>
     <div className="scroll"><div className="list" style=${{ minWidth: "560px" }}>
@@ -595,15 +1220,6 @@ function DataQuality({ hotels }) {
       </table>
     </div></div>
     <p className="note">If one vendor causes problems at many hotels, one fix with that vendor solves them all.</p>
-
-    <h2 className="sechead">When each check happens</h2>
-    <div className="layers">
-      ${STAGES.map((s, i) => html`<div className="layer" key=${i}>
-        <div className="ltitle">${s.title}</div>
-        <div className="lwhat">${s.what}</div>
-        <div className="lproto"><span>If something is wrong</span>${s.fail}</div>
-      </div>`)}
-    </div>
   </section>`;
 }
 
@@ -672,7 +1288,7 @@ const names = hs => hs.length <= 1 ? hs.map(h => h.name).join("") : hs.length ==
 function buildRun(hotels) {
   const flagged = hotels.filter(h => { const c = checksFor(h); return !(c.complete && c.fresh && c.valid); });
   const blocked = hotels.filter(blockedFor);
-  const usable = hotels.filter(h => !blockedFor(h));
+  const usable = hotels;
   const behind = usable.filter(h => h.st === "behind").sort((a, b) => a.monthGap - b.monthGap);
   const risk = usable.filter(h => h.fst === "behind").sort((a, b) => a.fGapPct - b.fGapPct);
   const why = h => h.gap >= 0 ? "" : (Math.abs(Math.min(h.occEffect, 0)) >= Math.abs(Math.min(h.rateEffect, 0))
@@ -680,7 +1296,7 @@ function buildRun(hotels) {
     : `${h.name} charged $${h.adr} a night, planned $${h.bAdr}.`);
   const steps = [
     { kind: "Look up", name: "Check each hotel’s data", detail: `Checked ${hotels.length} ${hotels.length === 1 ? "hotel" : "hotels"}. ${flagged.length ? flagged.length + (flagged.length === 1 ? " has" : " have") + " data problems." : "No data problems."}` },
-    { kind: "Safety rule", name: "Skip hotels with bad data", detail: blocked.length ? `Skipped ${names(blocked)}, because ${blocked.length === 1 ? "its" : "their"} data is missing or out of date.` : "Every hotel’s data is complete and current." },
+    { kind: "Safety rule", name: "Label estimated data", detail: blocked.length ? `${names(blocked)} ${blocked.length === 1 ? "has" : "have"} missing or late data. Those days use labeled estimates instead of being dropped.` : "Every hotel’s data is complete and current." },
     { kind: "Look up", name: "Find hotels behind budget", detail: behind.length ? `${names(behind)} made less than planned in October.` : "No hotels made less than planned in October." },
     { kind: "Look up", name: "Find out why", detail: behind.length ? behind.map(why).join(" ") : "Nothing to explain." },
     { kind: "Look up", name: "Look ahead to November", detail: risk.length ? `${names(risk)} will likely miss November too.` : "No hotels are likely to miss November." },
@@ -725,22 +1341,26 @@ function MorningCheck({ hotels, go }) {
       ${run.behind.length > 0 && html`<ul>${run.behind.map(h => html`<li key=${h.id}><button type="button" className="linkbtn" onClick=${() => go("portfolio", h.id)}>${h.name}</button>: ${money(-h.monthGap)} below budget, mostly from ${Math.abs(Math.min(h.occEffect, 0)) >= Math.abs(Math.min(h.rateEffect, 0)) ? "empty rooms" : "lower prices"}.</li>`)}</ul>`}
       ${run.risk.length > 0 && html`<p>${names(run.risk)} will likely miss November too.</p>`}
       ${top && html`<p><b>Start with ${top.name}.</b> It’s missing the most money. <button type="button" className="linkbtn" onClick=${() => go("simulator", top.id)}>Test a fix</button></p>`}
-      ${run.blocked.length > 0 && html`<p className="sources">Not included: ${names(run.blocked)}, until ${run.blocked.length === 1 ? "its" : "their"} data is fixed.</p>`}
+      ${run.blocked.length > 0 && html`<p className="sources">Includes estimated days for ${names(run.blocked)}. ${run.blocked.length === 1 ? "Its" : "Their"} numbers will update when the real data arrives.</p>`}
     </div>`}
     <p className="note">In a real version, this would run on Azure AI Foundry every morning, and each person would only see the hotels they look after.</p>
   </section>`;
 }
 
 const LAYERS = [
-  { title: "Who uses it", what: "Hotel general managers, regional leaders, executives, and owners.", proto: "The Viewing as menu" },
-  { title: "The website", what: "Built in React and hosted on Azure Static Web Apps.", proto: "This page, built in React" },
-  { title: "Signing in", what: "People sign in with their Microsoft work account through Microsoft Entra ID. Row-level security makes sure each person only sees the hotels they look after.", proto: "The Viewing as menu shows how this works" },
-  { title: "Behind the scenes", what: "Node.js APIs on Azure Functions. They check who you are before sending back any data.", proto: "Everything runs in the browser for now" },
-  { title: "Bringing data in", what: "Pipelines in Microsoft Fabric pull data from each vendor’s system every night. A config table lists every hotel and system, so adding a new hotel means adding a row, not writing new code. Data is saved first exactly as the vendor sent it, in a raw bronze layer, then cleaned in silver and shaped for reports in gold.", proto: "Sample hotels, systems, and vendors" },
-  { title: "Data quality", what: "Checks run at each step. When data arrives: is it on time and in the same format? In bronze: is anything missing or repeated? Before silver: do the numbers look normal? Bad data is kept out of reports and the team is alerted. Once the vendor fixes it, only the affected days are loaded again, and merging on each record’s ID means nothing is counted twice. Scores by vendor show who causes the most problems.", proto: "The Data checks and Data quality monitor tabs" },
-  { title: "Forecasts", what: "A Python model trained on each hotel’s history in Fabric, and retrained as new months come in.", proto: "A simple seasonal forecast" },
-  { title: "Smart features", what: "Azure OpenAI through Microsoft Foundry powers the question box, owner updates, and morning check. Azure AI Search finds the right reports, and answers are tested before release.", proto: "Ask a question, Owner update writer, and Morning check, using fixed rules" },
-  { title: "Testing and releases", what: "Every change goes through a Git pull request, unit, integration, and browser tests, and an Azure DevOps pipeline before it goes live.", proto: "Not built yet" }
+  { title: "Who uses it", what: "Executives, regional leaders, general managers, owners, and sales and marketing teams. Each person sees only the hotels they look after.", proto: "The Viewing as menu" },
+  { title: "The website", what: "A React app hosted on Azure Static Web Apps. Views are grouped into Overview, Tools, Reports, and Data quality, with a guided tour for new users.", proto: "This page, with the same sections and tour" },
+  { title: "Signing in and access", what: "People sign in with their Microsoft work account through Microsoft Entra ID. Row level security in the data and the APIs makes sure each person sees only their own hotels.", proto: "The Viewing as menu shows how this works" },
+  { title: "APIs", what: "Node.js APIs on Azure Functions check who you are, then return results, forecasts, and AI outputs for your hotels only.", proto: "Everything runs in the browser for now" },
+  { title: "Bringing data in", what: "Data Factory pipelines in Microsoft Fabric pull data every night from each hotel’s rooms, booking, restaurant, and staff systems, plus booking channel data and a local events feed. A config table lists every hotel and system, so adding a hotel means adding a row, not writing new code. Data lands in bronze exactly as sent, is cleaned in silver, and is shaped for reports in gold.", proto: "Sample hotels, systems, vendors, and events" },
+  { title: "Data quality", what: "Checks run at every layer: on time and same format when data lands, nothing missing or repeated in bronze, and normal values before silver. Profiling learns each feed’s normal ranges from the last 30 days. An expected calendar spots missing days automatically. Gaps are never dropped, because a missing day makes numbers like 7 day pickup look falsely low. They are filled with labeled estimates, and when the real file arrives it is backfilled into its correct date with a merge on hotel and date, so nothing is counted twice. Only the affected totals are recalculated, with a note that they changed. Lineage is tracked in Microsoft Purview, and vendor scores show who causes the most problems.", proto: "The Data quality tab: missing day example, lineage, profiling, and vendor scores" },
+  { title: "Forecasts and health scores", what: "Python models in Fabric notebooks forecast each hotel’s RevPAR and estimate demand around local events, retrained as new months come in. A health score combines results vs budget, the forecast, and data checks.", proto: "A simple seasonal forecast and a rule based health score" },
+  { title: "Map and events", what: "A portfolio map shows every hotel’s health. Events from a ticketing or events API are matched to nearby hotels, with suggested rate changes and promotions.", proto: "The Portfolio map with sample events and rule based suggestions" },
+  { title: "Sales and marketing", what: "Booking channel data shows the cost of each channel and the savings from moving bookings to the hotel website. Campaigns for slow periods are written in each brand’s voice and reviewed before sending.", proto: "The Sales and marketing tab with sample channel data" },
+  { title: "AI features", what: "Azure OpenAI through Microsoft Foundry writes owner updates, board reports, map stories, campaigns, and the morning brief. Azure AI Search grounds answers in real reports. Every number stays locked to the source data, and outputs are tested before release.", proto: "Ask a question, Owner update writer, Board report, Portfolio map, Sales and marketing, and Morning check, using fixed rules" },
+  { title: "Reports and sharing", what: "Board reports export to PDF. Owner updates and campaigns go out through Outlook and Teams. Power BI covers deeper analysis.", proto: "Download PDF and copy buttons" },
+  { title: "Monitoring", what: "Pipeline alerts for late or failed loads. For AI features, tracking of answer quality, speed, and cost, so problems are caught early.", proto: "Not built yet" },
+  { title: "Testing and releases", what: "Every change goes through a Git pull request, unit, integration, and browser tests, data tests in the pipelines, and an Azure DevOps pipeline before it goes live.", proto: "Not built yet" }
 ];
 
 function Architecture() {
@@ -806,8 +1426,8 @@ function OwnerUpdate({ hotels, focus, setFocus }) {
   const bodyText = draft ? draft.body : genBody;
   const startEdit = () => { if (!draft) setDraft({ subject: u.subject, body: genBody }); setEditing(true); };
   const copy = async () => {
-    try { await navigator.clipboard.writeText("Subject: " + subject + "\n\n" + bodyText); setCopied("Copied"); }
-    catch (e) { setCopied("Copy isn’t available here. Select the text to copy it."); }
+    const ok = await copyText("Subject: " + subject + "\n\n" + bodyText);
+    setCopied(ok ? "Copied" : "Copy isn’t available here. Select the text to copy it.");
     setTimeout(() => setCopied(""), 2500);
   };
   const mailto = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(bodyText);
@@ -861,6 +1481,326 @@ function OwnerUpdate({ hotels, focus, setFocus }) {
   </section>`;
 }
 
+// ---------- One click board report ----------
+function portfolioTotals(hs) {
+  const sum = f => hs.reduce((s, h) => s + f(h), 0);
+  const avail = sum(h => h.rooms) * DAYS_OCT;
+  const sold = sum(h => h.occ * h.rooms) * DAYS_OCT, bSold = sum(h => h.bOcc * h.rooms) * DAYS_OCT;
+  const rev = sum(h => h.revpar * h.rooms) * DAYS_OCT, bRev = sum(h => h.bRevpar * h.rooms) * DAYS_OCT;
+  const fRev = sum(h => h.fRevpar * h.rooms) * DAYS_NOV, fBud = sum(h => h.fBudget * h.rooms) * DAYS_NOV;
+  return { occ: sold / avail, bOcc: bSold / avail, adr: rev / sold, bAdr: bRev / bSold,
+    revpar: rev / avail, bRevpar: bRev / avail, rev, bRev, fRev, fBud };
+}
+function actionFor(h) {
+  const occ = Math.abs(Math.min(h.occEffect, 0)), rate = Math.abs(Math.min(h.rateEffect, 0));
+  return occ >= rate
+    ? `Fill more rooms at ${h.name}: step up group sales and run targeted promotions on the lowest demand dates.`
+    : `Recover rate at ${h.name}: review pricing on high demand dates and cut back discounting.`;
+}
+
+function BoardReport({ hotels, go, roleLabel }) {
+  const [mode, setMode] = useState("exec");
+  const [state, setState] = useState("idle");
+  const [copied, setCopied] = useState("");
+  useEffect(() => {
+    if (state !== "working") return;
+    const t = setTimeout(() => setState("ready"), 900);
+    return () => clearTimeout(t);
+  }, [state]);
+  const generate = () => {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setState(reduce ? "ready" : "working");
+  };
+
+  const t = portfolioTotals(hotels);
+  const scope = hotels.length === 1 ? hotels[0].name : "Portfolio";
+  const revGap = t.rev - t.bRev, revparGap = t.revpar / t.bRevpar - 1, fGap = t.fRev / t.fBud - 1;
+  const wins = hotels.filter(h => h.monthGap > 0).sort((a, b) => b.monthGap - a.monthGap).slice(0, 3);
+  const risks = hotels.filter(h => h.monthGap < 0).sort((a, b) => a.monthGap - b.monthGap).slice(0, 3);
+  const novRisk = hotels.filter(h => h.fst === "behind").sort((a, b) => a.fGapPct - b.fGapPct);
+  const flagged = hotels.filter(h => { const c = checksFor(h); return !(c.complete && c.fresh && c.valid); });
+  const byGap = [...hotels].sort((a, b) => b.gapPct - a.gapPct);
+  const topRisks = risks.slice(0, 2);
+  const extraNov = novRisk.filter(h => !topRisks.includes(h)).slice(0, 1);
+  const actions = [
+    ...topRisks.map(h => ({ h, t: actionFor(h) })),
+    ...extraNov.map(h => ({ h, t: `Review the November plan for ${h.name}, where bookings are ${signedPct(h.pace, 0)} vs last year.` })),
+    ...(flagged.length ? [{ h: flagged[0], t: `Resolve open data checks at ${names(flagged)} before final numbers go to owners.` }] : [])
+  ];
+  if (!actions.length) actions.push({ h: byGap[0], t: "Protect rates on peak dates and keep occupancy strong going into November." });
+
+  const lead = `${scope} RevPAR was $${t.revpar.toFixed(0)} in October, ${signedPct(revparGap)} vs budget, with room revenue ${revGap >= 0 ? money(revGap) + " above" : money(-revGap) + " below"} plan. November is forecast at ${signedPct(fGap)} vs budget.`;
+  const prepared = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const src = h => html`<button type="button" className="linkbtn srcbtn noprint" onClick=${() => go("portfolio", h.id)}>Source</button>`;
+  const kpi = (label, actual, budget, delta) => html`<div className="kpi"><span>${label}</span><b>${actual}</b><small>Budget ${budget}, ${delta}</small></div>`;
+
+  const plain = [
+    `${scope} board report, October 2026`, `Prepared ${prepared} for ${roleLabel}`, "", lead, "",
+    `Occupancy ${pct(t.occ, 1)}, budget ${pct(t.bOcc, 1)}`, `ADR $${t.adr.toFixed(0)}, budget $${t.bAdr.toFixed(0)}`,
+    `RevPAR $${t.revpar.toFixed(0)}, budget $${t.bRevpar.toFixed(0)}`, `Room revenue ${money(t.rev)}, budget ${money(t.bRev)}`, "",
+    "Wins", ...(wins.length ? wins.map(h => `${h.name}: ${money(h.monthGap)} above budget, ${signedPct(h.gapPct)} RevPAR`) : ["No hotels ahead of budget"]), "",
+    "Risks", ...(risks.length ? risks.map(h => `${h.name}: ${money(-h.monthGap)} below budget. ${mainDriver(h)}`) : ["No hotels below budget"]), "",
+    "Recommended actions", ...actions.map(a => a.t),
+    ...(flagged.length ? ["", "Data notes", ...flagged.map(h => `${h.name}: ${checksFor(h).issue}`)] : [])
+  ].join("\n");
+  const copy = async () => {
+    const ok = await copyText(plain);
+    setCopied(ok ? "Copied" : "Copy isn’t available here. Select the report text to copy it.");
+    setTimeout(() => setCopied(""), 2500);
+  };
+
+  return html`<section>
+    <p className="intro noprint">Turn this month’s results into a board ready summary in one click. Every statement links to the numbers behind it.</p>
+    <div className="toolbar noprint">
+      <div className="chiprow" role="group" aria-label="Report detail">
+        ${[["exec", "Executive summary"], ["ops", "With hotel detail"]].map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${mode === k} onClick=${() => setMode(k)}>${l}</button>`)}
+      </div>
+      ${state === "ready" && html`<div className="chiprow">
+        <button type="button" className="primary" onClick=${() => { if (!printPage()) setCopied("Printing isn’t available here. Open the live site to download the PDF."); }}>Download PDF</button>
+        <button type="button" className="reset" onClick=${copy}>Copy summary</button>
+        <button type="button" className="reset" onClick=${generate}>Regenerate</button>
+        <span aria-live="polite" style=${{ fontSize: "0.85rem", color: "var(--muted)", alignSelf: "center" }}>${copied}</span>
+      </div>`}
+    </div>
+
+    ${state !== "ready" && html`<div className="panel genbox noprint">
+      <p>The report covers ${hotels.length} ${hotels.length === 1 ? "hotel" : "hotels"} for ${roleLabel}: headline results, key numbers, wins, risks, the November outlook, recommended actions, and any open data issues.</p>
+      <button type="button" className="primary" onClick=${generate} disabled=${state === "working"}>${state === "working" ? "Writing the report" : "Generate board report"}</button>
+    </div>`}
+
+    ${state === "ready" && html`<article className="report" aria-live="polite">
+      <h2>${scope} board report, October 2026</h2>
+      <p className="rsub">Prepared ${prepared} for ${roleLabel}. ${hotels.length} ${hotels.length === 1 ? "hotel" : "hotels"}, ${hotels.reduce((s, h) => s + h.rooms, 0).toLocaleString("en-US")} rooms.</p>
+      <p className="rlead">${lead}</p>
+
+      <div className="kpis">
+        ${kpi("Occupancy", pct(t.occ, 1), pct(t.bOcc, 1), signedPct(t.occ - t.bOcc, 1).replace("%", " pts"))}
+        ${kpi("ADR", "$" + t.adr.toFixed(0), "$" + t.bAdr.toFixed(0), signedPct(t.adr / t.bAdr - 1))}
+        ${kpi("RevPAR", "$" + t.revpar.toFixed(0), "$" + t.bRevpar.toFixed(0), signedPct(revparGap))}
+        ${kpi("Room revenue", money(t.rev), money(t.bRev), (revGap >= 0 ? "+" : "") + money(revGap))}
+      </div>
+
+      ${hotels.length > 1 && html`<div className="rsec">
+        <h3>RevPAR vs budget by hotel</h3>
+        ${byGap.map(h => html`<div className="chartrow" key=${h.id}><span>${h.name}</span><${GapBar} v=${h.gapPct} /></div>`)}
+      </div>`}
+
+      <div className="rcols">
+        <div className="rsec">
+          <h3>Wins</h3>
+          ${wins.length ? html`<ul className="rlist">${wins.map(h => html`<li key=${h.id}><b>${h.name}</b>: ${money(h.monthGap)} above budget, RevPAR ${signedPct(h.gapPct)}.${src(h)}</li>`)}</ul>`
+            : html`<p className="rlist" style=${{ paddingLeft: 0 }}>No hotels finished ahead of budget this month.</p>`}
+        </div>
+        <div className="rsec">
+          <h3>Risks</h3>
+          ${risks.length ? html`<ul className="rlist">${risks.map(h => html`<li key=${h.id}><b>${h.name}</b>: ${money(-h.monthGap)} below budget. ${mainDriver(h)}${src(h)}</li>`)}</ul>`
+            : html`<p className="rlist" style=${{ paddingLeft: 0 }}>No hotels finished below budget this month.</p>`}
+        </div>
+      </div>
+
+      <div className="rsec">
+        <h3>November outlook</h3>
+        <p style=${{ margin: "0 0 8px" }}>Room revenue is forecast at ${money(t.fRev)} against a budget of ${money(t.fBud)}, ${signedPct(fGap)}.</p>
+        ${novRisk.length ? html`<ul className="rlist">${novRisk.map(h => html`<li key=${h.id}><b>${h.name}</b> is at risk, forecast ${signedPct(h.fGapPct)} vs budget with bookings ${signedPct(h.pace, 0)} vs last year.${src(h)}</li>`)}</ul>`
+          : html`<p style=${{ margin: 0 }}>No hotels are forecast to miss November budget.</p>`}
+      </div>
+
+      <div className="rsec">
+        <h3>Recommended actions</h3>
+        <ol className="rlist">${actions.map((a, i) => html`<li key=${i}>${a.t}${src(a.h)}</li>`)}</ol>
+      </div>
+
+      ${mode === "ops" && html`<div className="rsec">
+        <h3>Every hotel</h3>
+        <div className="scroll"><table className="dq" style=${{ minWidth: "640px" }}>
+          <thead><tr><th>Hotel</th><th>Occupancy</th><th>ADR</th><th>RevPAR</th><th>Vs budget</th><th>November</th><th>Data</th></tr></thead>
+          <tbody>${byGap.map(h => { const c = checksFor(h); const ok = c.complete && c.fresh && c.valid;
+            return html`<tr key=${h.id}><td>${h.name}</td><td className="num">${pct(h.occ)}</td><td className="num">$${h.adr}</td>
+              <td className="num">$${h.revpar.toFixed(0)}</td><td className="num">${signedPct(h.gapPct)}</td>
+              <td><span className=${"pill " + h.fst}>${FSTATUS_LABEL[h.fst]}</span></td><td>${ok ? "Passed" : html`<span className="bad">Open check</span>`}</td></tr>`; })}</tbody>
+        </table></div>
+      </div>`}
+
+      ${flagged.length > 0 && html`<div className="rsec">
+        <h3>Data notes</h3>
+        <ul className="rlist">${flagged.map(h => html`<li key=${h.id}><b>${h.name}</b>: ${checksFor(h).issue}</li>`)}</ul>
+      </div>`}
+
+      <p className="rfoot">Source: October 2026 results and November forecast in Hotel Portfolio Insights. Hotel names are from Pyramid Global Hospitality’s portfolio. All numbers are made up for this demo.</p>
+    </article>`}
+
+    <p className="note noprint">Download PDF opens your browser’s print window. Choose Save as PDF. In this prototype the narrative comes from fixed rules. In production, Azure OpenAI would write it, with every figure locked to the source data and checked before the report is released.</p>
+  </section>`;
+}
+
+// ---------- Sales and marketing: campaign generator and channel mix ----------
+// Sample hotel highlights and booking channel splits. All made up for the demo.
+const FEATURES = {
+  harborline: ["a private beach", "a full service spa", "farm to table dining"],
+  copper: ["a championship golf course", "mountain views", "a resort pool"],
+  gulfwind: ["a private beach", "a spa", "golf nearby"],
+  lakeshore: ["a downtown location", "a rooftop bar", "park views"],
+  pinehollow: ["family suites", "an indoor water park nearby", "fire pits"],
+  missionpalms: ["historic architecture", "a spa", "holiday lights"],
+  capeverde: ["a beachfront setting", "golf", "rainforest tours nearby"],
+  backbay: ["a heated pool", "harbor views nearby", "a lively restaurant"],
+  redwood: ["forest trails", "a spa", "ocean views"],
+  riverwalk: ["theme parks nearby", "a resort pool", "flexible meeting space"]
+};
+const CHANNEL_MIX = {
+  harborline: [.48, .27, .08, .17], copper: [.40, .30, .12, .18], gulfwind: [.32, .41, .10, .17],
+  lakeshore: [.35, .25, .28, .12], pinehollow: [.30, .48, .04, .18], missionpalms: [.45, .28, .10, .17],
+  capeverde: [.36, .34, .08, .22], backbay: [.42, .38, .06, .14], redwood: [.38, .30, .12, .20], riverwalk: [.28, .36, .22, .14]
+};
+const CHANNELS = [
+  { id: "direct", label: "Hotel website and phone", cost: 0.03, color: "#1F8A84" },
+  { id: "ota", label: "Online travel sites", cost: 0.18, color: "#C8483F" },
+  { id: "corp", label: "Corporate deals", cost: 0.00, color: "#5B5FC7" },
+  { id: "group", label: "Groups and events", cost: 0.05, color: "#C98A1B" }
+];
+const PERIODS = [
+  { id: "nov", label: "Weekdays in November", short: "this November", when: "Sunday to Thursday nights through November 30" },
+  { id: "thanks", label: "Thanksgiving week", short: "this Thanksgiving", when: "November 22 to 29" },
+  { id: "dec", label: "Early December", short: "this December", when: "December 1 to 18" },
+  { id: "jan", label: "January", short: "this January", when: "January 4 to 31" }
+];
+const AUDIENCES = [["leisure", "Leisure travelers"], ["business", "Business travelers"], ["groups", "Groups"]];
+const FORMATS = [["email", "Email"], ["social", "Social post"]];
+
+function offerFor(h, audience) {
+  const strong = h.st === "behind";
+  if (audience === "business") return { text: strong ? "15% off weekday stays plus late checkout" : "late checkout and free breakfast on weekday stays", code: strong ? "WORK15" : "WORKPLUS" };
+  if (audience === "groups") return { text: strong ? "one free room for every 10 booked, plus free meeting space for a day" : "free meeting space for a day when you book 10 or more rooms", code: strong ? "GROUP10" : "GROUPMEET" };
+  return { text: strong ? "save 15% when you stay 2 nights or more" : "free breakfast for two each morning of your stay", code: strong ? "ESCAPE15" : "ESCAPEPLUS" };
+}
+const joinList = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + ", and " + a[a.length - 1];
+
+function buildCampaign(h, periodId, audience, format) {
+  const p = PERIODS.find(x => x.id === periodId), feats = FEATURES[h.id] || [], o = offerFor(h, audience);
+  const town = h.city.split(",")[0];
+  if (format === "social") {
+    const opener = audience === "business" ? `Work trip to ${town} ${p.short}?` : audience === "groups" ? `Planning a team or family trip ${p.short}?` : `Your ${town} getaway is calling ${p.short}.`;
+    const tag = "#" + h.name.replace(/[^A-Za-z]/g, "");
+    return { subject: "", body: `${opener} Enjoy ${joinList(feats)} at ${h.name}. Our offer: ${o.text}. Dates: ${p.when}. Book on our website with code ${o.code}.\n\n${tag} #${town.replace(/[^A-Za-z]/g, "")} #TravelDeals` };
+  }
+  const subject = audience === "business" ? `Make your next ${town} work trip easier` : audience === "groups" ? `Bring your group to ${h.name} ${p.short}` : `Your ${town} escape ${p.short}`;
+  const body = [
+    "Hello,", "",
+    audience === "business" ? `Traveling to ${town} for work ${p.short}? ${h.name} makes it easy, with ${joinList(feats)} close at hand.`
+      : audience === "groups" ? `${h.name} is ready for your next team retreat, reunion, or celebration, with ${joinList(feats)}.`
+      : `Slow down and recharge at ${h.name}, with ${joinList(feats)} waiting for you.`, "",
+    `For a limited time, ${o.text}.`, `Dates: ${p.when}.`, "",
+    `Book on our website or call us, and use code ${o.code}.`, "",
+    "We look forward to welcoming you.", `The team at ${h.name}`
+  ].join("\n");
+  return { subject, body };
+}
+
+function SalesMarketing({ hotels, focus, setFocus }) {
+  const hotel = hotels.find(h => h.id === focus) || [...hotels].sort((a, b) => a.gapPct - b.gapPct)[0];
+  const [period, setPeriod] = useState("nov");
+  const [audience, setAudience] = useState("leisure");
+  const [format, setFormat] = useState("email");
+  const [draft, setDraft] = useState(null);
+  const [copied, setCopied] = useState("");
+  const [mixHotel, setMixHotel] = useState(null);
+  useEffect(() => { setDraft(null); }, [hotel.id, period, audience, format]);
+  const generate = () => setDraft(buildCampaign(hotel, period, audience, format));
+  const copy = async () => {
+    const ok = await copyText((draft.subject ? "Subject: " + draft.subject + "\n\n" : "") + draft.body);
+    setCopied(ok ? "Copied" : "Copy isn’t available here. Select the text to copy it.");
+    setTimeout(() => setCopied(""), 2500);
+  };
+  const target = hotel.st === "behind" ? Math.max(5, Math.round((hotel.bOcc - hotel.occ) * hotel.rooms)) : Math.round(hotel.rooms * 0.05);
+  const why = hotel.st === "behind"
+    ? `${hotel.name} is ${signedPct(hotel.gapPct)} vs its October budget, so the offer uses a stronger discount to fill rooms.`
+    : `${hotel.name} is ${hotel.st === "ahead" ? "ahead of" : "on track with"} budget, so the offer adds value instead of cutting price.`;
+
+  // Channel mix
+  const mix = hotels.map(h => {
+    const shares = CHANNEL_MIX[h.id] || [.4, .3, .1, .2];
+    const annual = h.revpar * h.rooms * 365;
+    const cost = shares.reduce((s, x, i) => s + x * annual * CHANNELS[i].cost, 0);
+    const shiftSave = annual * 0.05 * (CHANNELS[1].cost - CHANNELS[0].cost);
+    return { h, shares, annual, cost, shiftSave };
+  }).sort((a, b) => b.shares[1] - a.shares[1]);
+  const totalSave = mix.reduce((s, m) => s + m.shiftSave, 0);
+  const totalCost = mix.reduce((s, m) => s + m.cost, 0);
+  const pick = mix.find(m => m.h.id === mixHotel) || mix[0];
+  const tips = m => {
+    const t = [];
+    if (m.shares[1] >= 0.35) t.push("Online travel sites bring in a large share of bookings. Offer a member rate on the hotel website that is lower than the travel sites.");
+    if (m.shares[0] < 0.35) t.push("Direct bookings are low. Retarget past guests by email before they search on travel sites.");
+    if (m.shares[2] < 0.08) t.push("Corporate business is small. Sales could target local companies for weekday travel.");
+    if (m.shares[3] >= 0.2) t.push("Groups are strong. Protect group dates and use them to fill slower weekdays.");
+    if (!t.length) t.push("The mix is balanced. Keep moving repeat guests to the hotel website.");
+    return t;
+  };
+
+  return html`<section>
+    <p className="intro">Two tools for the sales and marketing team: write a campaign for a slow period, and see where bookings come from and what each channel costs.</p>
+
+    <h2 className="sechead" style=${{ marginTop: 0 }}>Campaign generator</h2>
+    <div className="sim">
+      <div className="panel">
+        <div className="ctl"><label htmlFor="smhotel">Hotel</label>
+          <select id="smhotel" value=${hotel.id} onChange=${e => setFocus(e.target.value)}>
+            ${hotels.map(h => html`<option key=${h.id} value=${h.id}>${h.name}</option>`)}
+          </select></div>
+        <div className="ctl"><label htmlFor="smperiod">Slow period to fill</label>
+          <select id="smperiod" value=${period} onChange=${e => setPeriod(e.target.value)}>
+            ${PERIODS.map(p => html`<option key=${p.id} value=${p.id}>${p.label}</option>`)}
+          </select></div>
+        <div className="ctl"><label>Who it’s for</label>
+          <div className="chiprow" role="group" aria-label="Audience">${AUDIENCES.map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${audience === k} onClick=${() => setAudience(k)}>${l}</button>`)}</div></div>
+        <div className="ctl"><label>Format</label>
+          <div className="chiprow" role="group" aria-label="Format">${FORMATS.map(([k, l]) => html`<button key=${k} type="button" aria-pressed=${format === k} onClick=${() => setFormat(k)}>${l}</button>`)}</div></div>
+        <button type="button" className="primary" onClick=${generate}>${draft ? "Write it again" : "Write campaign"}</button>
+      </div>
+      <div className="panel" aria-live="polite">
+        <h3>Draft</h3>
+        ${!draft ? html`<p className="intro" style=${{ margin: 0 }}>Choose a hotel, period, and audience, then select Write campaign.</p>` : html`<div>
+          ${format === "email" && html`<div className="ctl"><label htmlFor="smsubj">Subject</label><input id="smsubj" type="text" className="subjedit" value=${draft.subject} onChange=${e => setDraft({ ...draft, subject: e.target.value })} /></div>`}
+          <textarea className="editbox" style=${{ minHeight: format === "email" ? "260px" : "160px" }} aria-label="Campaign text" value=${draft.body} onChange=${e => setDraft({ ...draft, body: e.target.value })}></textarea>
+          <p style=${{ margin: "8px 0" }}><button type="button" className="primary" onClick=${copy}>Copy campaign</button> <span aria-live="polite" className="sources">${copied}</span></p>
+          <div className="infobox">
+            <p><b>Why this offer:</b> ${why}</p>
+            <p><b>Goal:</b> about ${target} more rooms a night during ${PERIODS.find(p => p.id === period).label.toLowerCase()}.</p>
+          </div>
+        </div>`}
+      </div>
+    </div>
+
+    <h2 className="sechead">Where bookings come from</h2>
+    <p className="intro">Online travel sites charge about 18% commission in this demo, while the hotel’s own website costs about 3%. Moving even a small share of bookings to direct saves real money.</p>
+    <div className="summary">
+      <div><b>${money(totalCost)}</b>estimated yearly booking costs</div>
+      <div><b>${money(totalSave)}</b>saved yearly by moving 5% of travel site bookings to direct</div>
+    </div>
+    <div className="legend" style=${{ marginBottom: "10px" }}>
+      ${CHANNELS.map(c => html`<span key=${c.id}><span className="dot" style=${{ background: c.color }}></span>${c.label}, ${pct(c.cost)} cost</span>`)}
+    </div>
+    <div className="list">
+      ${mix.map(m => html`<button key=${m.h.id} type="button" className="rowbtn" style=${{ gridTemplateColumns: "minmax(150px, 1fr) minmax(180px, 2fr) auto" }} aria-pressed=${pick.h.id === m.h.id} onClick=${() => setMixHotel(m.h.id)}>
+        <span className="hname" style=${{ fontSize: "0.95rem" }}>${m.h.name}${pick.h.id === m.h.id ? html`<span className="pill kind flag">Selected</span>` : ""}</span>
+        <span style=${{ display: "flex", height: "16px", borderRadius: "3px", overflow: "hidden" }} role="img" aria-label=${CHANNELS.map((c, i) => c.label + " " + pct(m.shares[i])).join(", ")}>
+          ${m.shares.map((x, i) => html`<span key=${i} style=${{ width: x * 100 + "%", background: CHANNELS[i].color }}></span>`)}
+        </span>
+        <span className="num" style=${{ fontSize: "0.85rem" }}>Travel sites ${pct(m.shares[1])}</span>
+      </button>`)}
+    </div>
+    <div className="panel" style=${{ marginTop: "12px" }} aria-live="polite">
+      <h3>${pick.h.name}</h3>
+      <div className="parts" style=${{ marginTop: 0 }}>
+        ${CHANNELS.map((c, i) => html`<div key=${c.id}><span><span className="dot" style=${{ background: c.color }}></span>${c.label}</span><span className="num">${pct(pick.shares[i])} of bookings, ${money(pick.annual * pick.shares[i] * c.cost)} cost a year</span></div>`)}
+      </div>
+      <p><b>Move 5% from travel sites to direct:</b> saves about ${money(pick.shiftSave)} a year.</p>
+      <ul className="why" style=${{ color: "var(--ink)" }}>${tips(pick).map((t, i) => html`<li key=${i}>${t}</li>`)}</ul>
+    </div>
+    <p className="note">Hotel highlights, channel splits, and costs are sample numbers. Yearly figures use October’s RevPAR as the run rate. In production, channel data would come from each hotel’s booking system, and a language model would write the campaigns in each brand’s voice.</p>
+  </section>`;
+}
+
 const CONTRIBUTIONS = [
   { title: "Assistants you can trust", have: "At PRAK Technologies, I build features that answer questions from company documents, with checks that catch bad answers. At CareerGPT, I made our AI answers 30% more relevant.", here: "An assistant that answers owner questions from real reports and shows where each answer came from." },
   { title: "Seeing problems early", have: "I helped build TalentPulse, which predicts which employees may leave, explains why, and shows what it would cost.", here: "Spotting hotels that may miss budget, and why, before the month is over." },
@@ -894,19 +1834,159 @@ function AboutMe() {
   </section>`;
 }
 
+// ---------- Welcome page and tour ----------
+const TOUR = [
+  { view: "portfolio", title: "Start with the portfolio", text: "Every hotel’s October results vs budget. Select a hotel to see what’s driving the gap." },
+  { view: "portfolio-map", title: "Health at a glance", text: "Each pin shows a hotel’s health score. Select one to read its story, and turn on events to spot demand nearby." },
+  { view: "forecast", title: "Look ahead to November", text: "A forecast for every hotel, with the reasons behind each number." },
+  { view: "simulator", title: "Test before you act", text: "Change the price or add guests and see the effect on revenue and budget." },
+  { view: "ask", title: "Ask in plain English", text: "Answers are calculated from the data you’re allowed to see, and list their sources." },
+  { view: "sales-marketing", title: "Fill slow periods", text: "Write a campaign in one click, and see what each booking channel costs." },
+  { view: "board-report", title: "Report to the board", text: "Turn the month’s results into a board ready summary you can download as a PDF." },
+  { view: "data-quality", title: "Trust the numbers", text: "Every system at every hotel is checked each night. Missing days are filled with labeled estimates, then replaced when the real data arrives." },
+  { view: "morning-check", title: "A daily brief", text: "An assistant checks every hotel each morning and writes leaders a short summary. That’s the tour. Feel free to explore any tab." }
+];
+
+function Welcome({ startTour }) {
+  const [helpOpen, setHelpOpen] = useState(0);
+  const [cur, setCur] = useState(0);
+  const [open, setOpen] = useState([0]);
+  const toggleFloor = i => { setCur(i); setOpen(open.includes(i) ? open.filter(x => x !== i) : [...open, i]); };
+  const ride = d => { const n = Math.max(0, Math.min(LAYERS.length - 1, cur + d)); setCur(n); setOpen([n]); };
+  const allOpen = open.length === LAYERS.length;
+  const floorName = i => i === 0 ? "Lobby" : "Floor " + i;
+  const order = LAYERS.map((l, i) => i).reverse();
+  return html`<section className="welcome">
+    <div className="whi">
+      <h1>Hi, I’m Sahithi.</h1>
+      <button type="button" className="primary" onClick=${startTour}>Take the tour</button>
+    </div>
+
+    <h2 className="sechead">About me</h2>
+    <div className="desk">
+      <div>
+        <div className="keycard" role="img" aria-label="Hotel room key card for Sahithi Muppavaram">
+          <div className="ktop"><span>🏨 Hotel Portfolio Insights</span>
+            <svg className="ktap" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7a7 7 0 0 1 0 10M11.5 4.5a11 11 0 0 1 0 15M4.5 9.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <span className="kstripe" aria-hidden="true"></span>
+          <div className="kbottom"><span className="klabel">Room key</span><span className="kname">Sahithi Muppavaram</span></div>
+        </div>
+      </div>
+      <div>
+        <p className="kbio">I’m an AI engineer. I build tools that turn data into answers people can trust. I currently work at PRAK Technologies, and I have a master’s degree in Information Systems from Northeastern University.</p>
+        <dl className="kfacts">
+          <div><dt>Can start</dt><dd>In 2 weeks</dd></div>
+          <div><dt>Email</dt><dd><a href="mailto:sahithi.muppavaram@gmail.com">sahithi.muppavaram@gmail.com</a></dd></div>
+          <div><dt>Phone</dt><dd><a href="tel:+19198066305">(919) 806-6305</a></dd></div>
+          <div><dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/sahithi-muppavaram/" target="_blank" rel="noopener noreferrer">linkedin.com/in/sahithi-muppavaram</a></dd></div>
+          <div><dt>Portfolio</dt><dd><a href="https://sahithimuppavaram.github.io/" target="_blank" rel="noopener noreferrer">sahithimuppavaram.github.io</a></dd></div>
+        </dl>
+      </div>
+    </div>
+    <div>
+        <h3 className="deskh" style=${{ marginTop: "24px" }}>How I can help your team</h3>
+        <div className="acc">
+          ${CONTRIBUTIONS.map((c, i) => html`<div key=${i} className=${"accitem" + (helpOpen === i ? " open" : "")}>
+            <button type="button" className="accbtn" aria-expanded=${helpOpen === i} aria-controls=${"help" + i} onClick=${() => setHelpOpen(helpOpen === i ? null : i)}>
+              <span>${c.title}</span><span className="chev" aria-hidden="true"></span>
+            </button>
+            ${helpOpen === i && html`<div className="accbody" id=${"help" + i}>
+              <p><b>What I’ve done:</b> ${c.have}</p>
+              <p><b>At Pyramid:</b> ${c.here}</p>
+            </div>`}
+          </div>`)}
+        </div>
+    </div>
+
+    <h2 className="sechead">How I’d build it</h2>
+    <p className="intro">Think of the system as a hotel building. People arrive in the lobby, and each floor above is one layer that makes the tool work. Click any floor to look inside, or ride the elevator up and down with the arrow buttons.</p>
+    <div className="tower">
+      <div className="elevator" aria-live="polite">
+        <div className="epanel">
+          <span className="elabel">Elevator</span>
+          <span className="edisp">${cur === 0 ? "L" : cur}</span>
+          <span className="ebtns">
+            <button type="button" aria-label="Elevator up one floor" disabled=${cur === LAYERS.length - 1} onClick=${() => ride(1)}>▲</button>
+            <button type="button" aria-label="Elevator down one floor" disabled=${cur === 0} onClick=${() => ride(-1)}>▼</button>
+          </span>
+        </div>
+        <span className="ename">Now on ${floorName(cur)}: ${LAYERS[cur].title}</span>
+        <button type="button" className="linkbtn" onClick=${() => setOpen(allOpen ? [cur] : LAYERS.map((l, i) => i))}>${allOpen ? "Close all floors" : "Open all floors"}</button>
+      </div>
+      <div className="roof"><span>How I’d build it</span></div>
+      <div className="floors">
+        ${order.map(i => { const l = LAYERS[i], isOpen = open.includes(i), built = !/^Not built/.test(l.proto);
+          return html`<div key=${i} className=${"floor" + (isOpen ? " open" : "") + (cur === i ? " cur" : "") + (i === 0 ? " lobby" : "")}>
+            <button type="button" className="floorbtn" aria-expanded=${isOpen} aria-controls=${"floor" + i} onClick=${() => toggleFloor(i)}>
+              <span className="fnum">${i === 0 ? "L" : i}</span>
+              <span className="ftitle">${l.title}</span>
+              <span className="windows" aria-hidden="true">${[0, 1, 2, 3].map(w => html`<i key=${w}></i>`)}</span>
+              <span className="shaft" aria-hidden="true">${cur === i && html`<span className="car"><span></span></span>`}</span>
+            </button>
+            ${isOpen && html`<div className="fbody" id=${"floor" + i}>
+              <p>${l.what}</p>
+              <p className="fproto"><span className=${"pill " + (built ? "ahead" : "kind")}>${built ? "In this prototype" : "Planned"}</span> ${l.proto}</p>
+            </div>`}
+          </div>`; })}
+      </div>
+      <div className="street" aria-hidden="true"></div>
+    </div>
+
+    <div className="wend">
+      <p>Ready to see it work?</p>
+      <button type="button" className="primary" onClick=${startTour}>Take the tour</button>
+    </div>
+  </section>`;
+}
+
+function TourCard({ step, setStep, end }) {
+  const t = TOUR[step];
+  const ref = useRef(null);
+  useEffect(() => { if (ref.current) ref.current.focus(); }, [step]);
+  useEffect(() => {
+    const k = e => { if (e.key === "Escape") end(); };
+    window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
+  }, []);
+  const last = step === TOUR.length - 1;
+  return html`<div className="tour" role="dialog" aria-label="Guided tour" aria-live="polite">
+    <div className="tdots" aria-hidden="true">${TOUR.map((_, i) => html`<span key=${i} className=${i === step ? "on" : i < step ? "done" : ""}></span>`)}</div>
+    <small>Step ${step + 1} of ${TOUR.length}</small>
+    <h3 tabIndex="-1" ref=${ref}>${t.title}</h3>
+    <p>${t.text}</p>
+    <div className="tbtns">
+      <button type="button" className="tghost" onClick=${end}>End tour</button>
+      <span>
+        ${step > 0 && html`<button type="button" className="tghost" onClick=${() => setStep(step - 1)}>Back</button>`}
+        <button type="button" className="tnext" onClick=${() => last ? end() : setStep(step + 1)}>${last ? "Finish" : "Next"}</button>
+      </span>
+    </div>
+  </div>`;
+}
+
 const VIEWS = [
+  { id: "welcome", label: "Welcome", C: Welcome },
   { id: "portfolio", label: "Portfolio", C: Portfolio },
+  { id: "portfolio-map", label: "Portfolio map", C: PortfolioMap },
   { id: "forecast", label: "November forecast", C: Forecast },
-  { id: "simulator", label: "What-if simulator", C: Simulator },
-  { id: "data-checks", label: "Data checks", C: DataChecks },
-  { id: "data-quality", label: "Data quality monitor", C: DataQuality },
+  { id: "simulator", label: "What if simulator", C: Simulator },
+  { id: "data-quality", label: "Data quality", C: DataQuality },
   { id: "ask", label: "Ask a question", C: Ask },
   { id: "owner-update", label: "Owner update writer", C: OwnerUpdate },
-  { id: "morning-check", label: "AI morning check", C: MorningCheck },
-  { id: "architecture", label: "How I’d build it", C: Architecture },
-  { id: "about-me", label: "About me", C: AboutMe }
+  { id: "board-report", label: "Board report", C: BoardReport },
+  { id: "sales-marketing", label: "Sales and marketing", C: SalesMarketing },
+  { id: "morning-check", label: "AI morning check", C: MorningCheck }
 ];
-const viewFromHash = () => { const h = location.hash.replace("#", ""); return VIEWS.some(v => v.id === h) ? h : "portfolio"; };
+const viewFromHash = () => { let h = location.hash.replace("#", "");
+  if (h === "data-checks") h = "data-quality";
+  if (h === "about-me" || h === "architecture") h = "welcome";
+  return VIEWS.some(v => v.id === h) ? h : "welcome"; };
+const SECTIONS = [
+  { id: "overview", label: "Overview", views: ["portfolio", "portfolio-map", "forecast"] },
+  { id: "tools", label: "Tools", views: ["simulator", "ask", "sales-marketing", "morning-check"] },
+  { id: "reports", label: "Reports", views: ["owner-update", "board-report"] },
+  { id: "data", label: "Data quality", views: ["data-quality"] }
+];
+const sectionOf = v => SECTIONS.find(x => x.views.includes(v)) || SECTIONS[0];
 
 function App() {
   const [view, setView] = useState(viewFromHash());
@@ -929,30 +2009,49 @@ function App() {
   const goBack = () => { if (!trail.length) return; const last = trail[trail.length - 1]; setTrail(t => t.slice(0, -1)); navigate(last, true); };
   const role = ROLES.find(r => r.id === roleId);
   const hotels = ENRICHED.filter(role.test);
-  const go = (v, id) => { if (v === "portfolio") setOpen(id); if (v === "simulator" || v === "owner-update") setFocus(id); navigate(v); };
+  const go = (v, id) => { if (v === "portfolio") setOpen(id); if (v === "simulator" || v === "owner-update" || v === "sales-marketing") setFocus(id); navigate(v); };
   const behind = hotels.filter(h => h.st === "behind");
   const stake = hotels.filter(h => h.monthGap < 0).reduce((s, h) => s + h.monthGap, 0);
   const headline = hotels.length === 1
     ? `${hotels[0].name} is ${hotels[0].st === "behind" ? "behind" : hotels[0].st === "ahead" ? "ahead of" : "on track with"} budget in October.`
     : behind.length ? `${behind.length} of ${hotels.length} hotels are behind budget in October.` : `All ${hotels.length} hotels are on track or ahead of budget in October.`;
   const Current = VIEWS.find(v => v.id === view).C;
-  return html`<div className="wrap">
+  const onWelcome = view === "welcome";
+  const curSec = sectionOf(view);
+  const tt = portfolioTotals(hotels);
+  const [tourStep, setTourStep] = useState(null);
+  const goTour = i => { setTourStep(i); navigate(TOUR[i].view, true); };
+  const startTour = () => goTour(0);
+  const endTour = () => setTourStep(null);
+  return html`<div className=${"wrap" + (tourStep !== null ? " touring" : "")}>
     <header className="top">
-      <div className="brand">Hotel Portfolio Insights</div>
-      <div className="role"><label htmlFor="role">Viewing as</label>
+      <div className="brand"><button type="button" className="brandlink" onClick=${() => navigate("welcome")}>Hotel Portfolio Insights</button>
+        <small>A prototype by Sahithi Muppavaram. <button type="button" className="linkbtn" onClick=${() => navigate("welcome")}>About me</button></small></div>
+      ${onWelcome ? html`<button type="button" className="primary" onClick=${startTour}>Take the tour</button>`
+        : html`<div className="role"><label htmlFor="role">Viewing as</label>
         <select id="role" value=${roleId} onChange=${e => { setRoleId(e.target.value); setOpen(null); setFocus(null); }}>
           ${ROLES.map(r => html`<option key=${r.id} value=${r.id}>${r.label}</option>`)}
-        </select></div>
+        </select></div>`}
     </header>
-    <div className="hero">
+    ${!onWelcome && html`<div className="hero">
       <h1>${headline}</h1>
       <p>${stake < 0 ? html`<span className="stake">${money(-stake)}</span>` : "No"} room revenue below budget this month${stake < 0 ? ", across the hotels in your view." : "."}</p>
-    </div>
-    ${trail.length > 0 && html`<button type="button" className="backbtn" onClick=${goBack}>← Back to ${VIEWS.find(v => v.id === trail[trail.length - 1]).label}</button>`}
-    <nav className="tabs" aria-label="Views">
-      ${VIEWS.map(v => html`<a key=${v.id} href=${"#" + v.id} aria-current=${view === v.id ? "page" : undefined} onClick=${e => { e.preventDefault(); navigate(v.id); }}>${v.label}</a>`)}
-    </nav>
-    <${Current} key=${view + roleId} hotels=${hotels} open=${open} setOpen=${setOpen} focus=${focus} setFocus=${setFocus} go=${go} />
+      <div className="kstrip">
+        <div><span>Occupancy</span><b>${pct(tt.occ, 1)}</b><small>Budget ${pct(tt.bOcc, 1)}</small></div>
+        <div><span>Average rate</span><b>$${tt.adr.toFixed(0)}</b><small>Budget $${tt.bAdr.toFixed(0)}</small></div>
+        <div><span>RevPAR</span><b>$${tt.revpar.toFixed(0)}</b><small>Budget $${tt.bRevpar.toFixed(0)}</small></div>
+        <div><span>Room revenue vs budget</span><b className=${tt.rev - tt.bRev < 0 ? "stake" : "ok"}>${(tt.rev - tt.bRev >= 0 ? "+" : "") + money(tt.rev - tt.bRev)}</b><small>October 2026</small></div>
+      </div>
+    </div>`}
+    ${!onWelcome && trail.length > 0 && html`<button type="button" className="backbtn" onClick=${goBack}>← Back to ${VIEWS.find(v => v.id === trail[trail.length - 1]).label}</button>`}
+    ${!onWelcome && html`<div className="sections" role="group" aria-label="Sections">
+      ${SECTIONS.map(x => html`<button key=${x.id} type="button" aria-pressed=${curSec.id === x.id} onClick=${() => navigate(x.views[0])}>${x.label}</button>`)}
+    </div>`}
+    ${!onWelcome && curSec.views.length > 1 && html`<nav className="tabs" aria-label=${curSec.label + " views"}>
+      ${curSec.views.map(id => VIEWS.find(v => v.id === id)).map(v => html`<a key=${v.id} href=${"#" + v.id} aria-current=${view === v.id ? "page" : undefined} onClick=${e => { e.preventDefault(); navigate(v.id); }}>${v.label}</a>`)}
+    </nav>`}
+    <${Current} key=${view + roleId} hotels=${hotels} open=${open} setOpen=${setOpen} focus=${focus} setFocus=${setFocus} go=${go} roleLabel=${role.label} headline=${headline} stake=${stake} navTo=${navigate} startTour=${startTour} />
+    ${tourStep !== null && html`<${TourCard} step=${tourStep} setStep=${goTour} end=${endTour} />`}
     <footer><strong>Disclaimer:</strong> Hotel names are from Pyramid Global Hospitality’s portfolio. All numbers are made up for this demo and are not actual hotel results.</footer>
   </div>`;
 }
